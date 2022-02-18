@@ -37,8 +37,8 @@ impl Translate {
                     exit(0);
                 }
 
-                let mut buffer = String::new();
-                std::io::stdin().read_to_string(&mut buffer).unwrap();
+                    let mut buffer = String::new();
+                    std::io::stdin().read_to_string(&mut buffer).unwrap();
 
                 buffer.trim().to_string()
             }

@@ -49,6 +49,7 @@ pub fn workspace_root() -> Result<PathBuf> {
     }
 
     let stdout = str::from_utf8(&output.stdout).unwrap();
+
     if let Some(line) = stdout.lines().next() {
         let meta: serde_json::Value = serde_json::from_str(line)
             .map_err(|_| Error::CargoError("InvalidOutput".to_string()))?;
@@ -56,10 +57,10 @@ pub fn workspace_root() -> Result<PathBuf> {
         let root = meta["workspace_root"]
             .as_str()
             .ok_or_else(|| Error::CargoError("InvalidOutput".to_string()))?;
-        return Ok(root.into());
+        Ok(root.into())
+    } else {
+        Err(Error::CargoError("InvalidOutput".to_string()))
     }
-
-    Err(Error::CargoError("InvalidOutput".to_string()))
 }
 
 /// Checks if the directory contains `Cargo.toml`

@@ -1,3 +1,6 @@
+use structopt::StructOpt;
+
+pub mod autofmt;
 pub mod build;
 pub mod cfg;
 pub mod clean;
