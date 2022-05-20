@@ -3,6 +3,7 @@ pub mod cfg;
 pub mod clean;
 pub mod config;
 pub mod create;
+pub mod render_rsx;
 pub mod serve;
 pub mod tool;
 pub mod translate;
@@ -47,6 +48,8 @@ pub enum Commands {
     Build(build::Build),
     /// Translate some source file into Dioxus code.
     Translate(translate::Translate),
+    /// Render a rsx fragment as html
+    Render(render_rsx::Render),
     /// Build, watch & serve the Rust WASM app and all of its assets.
     Serve(serve::Serve),
     /// Init a new project for Dioxus.

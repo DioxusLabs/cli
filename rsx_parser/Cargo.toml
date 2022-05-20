@@ -1,0 +1,15 @@
+[package]
+name = "rsx_parser"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[build-dependencies]
+lalrpop = "0.19.7"
+
+[dependencies]
+lalrpop-util = { version = "^0.19", features = ["lexer"] }
+logos = "0.12.0"
+lazy_static = "1.4.0"
+qp-trie = "0.8.0"
+dioxus = { version = "0.2.4", features = ["web", "ssr"] }

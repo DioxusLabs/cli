@@ -13,6 +13,12 @@ async fn main() -> Result<()> {
             }
         }
 
+        Commands::Render(opts) => {
+            if let Err(e) = opts.render() {
+                log::error!("render error: {}", e);
+            }
+        }
+
         Commands::Build(opts) => {
             if let Err(e) = opts.build() {
                 log::error!("build error: {}", e);

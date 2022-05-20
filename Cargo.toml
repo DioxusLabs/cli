@@ -46,6 +46,11 @@ flate2 = "1.0.22"
 tar = "0.4.38"
 tower = "0.4.12"
 
+rsx_parser = { path = "./rsx_parser" }
+
 [[bin]]
 path = "src/main.rs"
 name = "dioxus"
+
+[workspace]
+members = ["rsx_parser"]
