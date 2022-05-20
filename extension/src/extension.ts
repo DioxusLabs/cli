@@ -29,4 +29,30 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('extension.htmlToDioxusRsx');
 	registerCommand('extension.htmlToDioxusComponent');
+
+	function registerPreview(cmd: string) {
+		function preview(cmd: string) {
+			const editor = vscode.window.activeTextEditor;// Get the active text editor
+			if (editor) {
+				const rsx = editor.document.getText(editor.selection);
+				if (rsx.length > 0) {
+					let params = ["render"];
+					params.push("--source");
+					params.push(rsx);
+					const child_proc = spawn("dioxus", params);
+					let result = '';
+					child_proc.stdout?.on('data', data => result += data);
+					child_proc.on('close', () => {
+						if (result.length > 0) editor.edit(editBuilder => editBuilder.replace(editor.selection, result));
+					});
+				} else {
+					vscode.window.showWarningMessage("Please select RSX fragment before invoking this command!");
+				}
+			}
+		}
+		const handle = vscode.commands.registerCommand(cmd, () => preview(cmd));
+		context.subscriptions.push(handle);
+	}
+
+	registerPreview('extension.previewRsx');
 }

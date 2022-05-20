@@ -24,6 +24,10 @@
     "contributes": {
         "commands": [
             {
+                "command": "extension.previewRsx",
+                "title": "Dioxus: Preview RSX as HTML"
+            },
+            {
                 "command": "extension.htmlToDioxusRsx",
                 "title": "Dioxus: Convert HTML to RSX"
             },
