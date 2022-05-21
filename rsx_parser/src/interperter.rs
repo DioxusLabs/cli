@@ -8,13 +8,13 @@ use crate::{
 
 pub fn build<'a>(rsx: RsxCall<'a>, factory: &NodeFactory<'a>) -> VNode<'a> {
     let children_built = factory.bump().alloc(Vec::new());
-    for child in rsx.0 {
-        children_built.push(build_node(child, factory));
+    for (i, child) in rsx.0.into_iter().enumerate() {
+        children_built.push(build_node(child, factory, i.to_string().as_str()));
     }
     factory.fragment_from_iter(children_built.iter())
 }
 
-fn build_node<'a>(node: Node<'a>, factory: &NodeFactory<'a>) -> VNode<'a> {
+fn build_node<'a>(node: Node<'a>, factory: &NodeFactory<'a>, key: &str) -> VNode<'a> {
     let bump = factory.bump();
     match node {
         Node::Element(element) => {
@@ -39,10 +39,10 @@ fn build_node<'a>(node: Node<'a>, factory: &NodeFactory<'a>) -> VNode<'a> {
                     }
                 }
             }
-            let key = None;
             let children = bump.alloc(Vec::new());
-            for child in element.children {
-                children.push(build_node(child, factory));
+            for (i, child) in element.children.into_iter().enumerate() {
+                let node = build_node(child, factory, i.to_string().as_str());
+                children.push(node);
             }
             build_element(
                 factory,
@@ -50,7 +50,7 @@ fn build_node<'a>(node: Node<'a>, factory: &NodeFactory<'a>) -> VNode<'a> {
                 &[],
                 attributes.as_slice(),
                 children.as_slice(),
-                key,
+                Some(format_args!("{}", key)),
             )
         }
         Node::Text(text) => {

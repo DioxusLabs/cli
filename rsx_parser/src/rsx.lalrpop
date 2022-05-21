@@ -8,6 +8,7 @@ grammar<'input>(input: &'input str);
 
 pub Rsx: RsxCall<'input> = {
     "rsx!" "{" <(NodeConstructor)*> "}" => RsxCall(<>),
+    <(NodeConstructor)*> => RsxCall(<>),
 };
 
 Comma<T>: Vec<T> = {

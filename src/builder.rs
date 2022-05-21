@@ -95,7 +95,9 @@ pub fn build(config: &CrateConfig) -> Result<()> {
             .unwrap();
     });
     if bindgen_result.is_err() {
-        log::error!("Bindgen build failed! \nThis is probably due to the Bindgen version, dioxus-cli using `0.2.79` Bindgen crate.");
+        log::error!(
+            "Bindgen build failed! \nThis is probably due to the Bindgen version, dioxus-cli using `0.2.79` Bindgen crate."
+        );
         return Ok(());
     }
 

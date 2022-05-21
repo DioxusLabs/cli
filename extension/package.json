@@ -18,7 +18,8 @@
     ],
     "activationEvents": [
         "onCommand:extension.htmlToDioxusRsx",
-        "onCommand:extension.htmlToDioxusComponent"
+        "onCommand:extension.htmlToDioxusComponent",
+        "onCommand:extension.previewRsx"
     ],
     "main": "./out/extension",
     "contributes": {
