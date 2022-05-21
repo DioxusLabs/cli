@@ -44,7 +44,6 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	function preview() {
 		const editor = vscode.window.activeTextEditor;// Get the active text editor
-		console.log("preview");
 		if (editor) {
 			preview_selection = editor.selection;
 			const rsx = editor.document.getText(preview_selection);
@@ -114,10 +113,12 @@ export function activate(context: vscode.ExtensionContext) {
 				let lines_added = lines.length;
 				let last_line = lines.at(-1);
 				let chars_added = last_line.length;
+				let chars_diff = chars_added;
+				chars_diff -= range_removed.end.character - range_removed.start.character;
 				if (range_removed.end.isBefore(start)) {
 					if (range_removed.start.isBefore(start)) {
 						if (start.line == range_removed.end.line) {
-							start = end.translate(0, chars_added - range_removed.end.charicter);
+							start = start.translate(0, chars_diff);
 						}
 						start = start.translate(lines_added - 1 + range_removed.start.line - range_removed.end.line, 0);
 					}
@@ -133,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if (range_removed.end.isBefore(end)) {
 					if (range_removed.start.isBefore(end)) {
 						if (end.line == range_removed.end.line) {
-							end = end.translate(0, chars_added - range_removed.end.charicter);
+							end = end.translate(0, chars_diff);
 						}
 						end = end.translate(lines_added - 1 + range_removed.start.line - range_removed.end.line, 0);
 					}
