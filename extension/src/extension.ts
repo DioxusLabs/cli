@@ -69,16 +69,8 @@ export function activate(context: vscode.ExtensionContext) {
 </head>
 <body> <div id="maindiv">` + result + ` </div> </body>
 <script>
-	const counter = document.getElementById('lines-of-code-counter');
-
-	let count = 0;
-	setInterval(() => {
-		counter.textContent = count++;
-	}, 100);
-
 	// Handle the message inside the webview
 	window.addEventListener('message', event => {
-
 		const message = event.data; // The JSON data our extension sent
 		document.getElementById("maindiv").innerHTML = message.command;
 	});
@@ -105,10 +97,57 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	const handle = vscode.commands.registerCommand('extension.previewRsx', () => preview());
 	vscode.workspace.onDidChangeTextDocument((event: any) => {
-		if (currentPanel) {
-			// for (let change of event.contentChanges) {
-			// 	preview_selection.end = min(preview_selection.end, change.range.end);
-			// }
+		function remove_window() {
+			preview_selection = undefined;
+			if (currentPanel) {
+				currentPanel.dispose();
+				currentPanel = undefined;
+			}
+		}
+		// adjust the selection based on the edits
+		if (preview_selection) {
+			let start: vscode.Position = preview_selection.start;
+			let end: vscode.Position = preview_selection.end;
+			for (let change of event.contentChanges) {
+				let range_removed = change.range;
+				let lines = change.text.split('\n');
+				let lines_added = lines.length;
+				let last_line = lines.at(-1);
+				let chars_added = last_line.length;
+				if (range_removed.end.isBefore(start)) {
+					if (range_removed.start.isBefore(start)) {
+						if (start.line == range_removed.end.line) {
+							start = end.translate(0, chars_added - range_removed.end.charicter);
+						}
+						start = start.translate(lines_added - 1 + range_removed.start.line - range_removed.end.line, 0);
+					}
+					else {
+						remove_window();
+						return;
+					}
+				}
+				else if (range_removed.start.isBefore(start)) {
+					remove_window();
+					return;
+				}
+				if (range_removed.end.isBefore(end)) {
+					if (range_removed.start.isBefore(end)) {
+						if (end.line == range_removed.end.line) {
+							end = end.translate(0, chars_added - range_removed.end.charicter);
+						}
+						end = end.translate(lines_added - 1 + range_removed.start.line - range_removed.end.line, 0);
+					}
+					else {
+						remove_window();
+						return;
+					}
+				}
+				else if (range_removed.start.isBefore(end)) {
+					remove_window();
+					return;
+				}
+			}
+			preview_selection = new vscode.Selection(start, end);
 			const rsx = event.document.getText(preview_selection);
 			html_from_rsx(rsx, (result) => {
 				if (currentPanel) {
