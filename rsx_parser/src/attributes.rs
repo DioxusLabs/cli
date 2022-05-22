@@ -1,3 +1,23 @@
+// terible hack to coerce the lifetime to static
+pub fn attrbute_to_static_str(attr: &str) -> Option<&'static str> {
+    NO_NAMESPACE_ATTRIBUTES
+        .iter()
+        .find(|&a| *a == attr)
+        .map(|a| *a)
+        .or(STYLE_ATTRIBUTES
+            .iter()
+            .find(|(a, _)| *a == attr)
+            .map(|(a, _)| *a))
+        .or(MAPPED_ATTRIBUTES
+            .iter()
+            .find(|(a, _)| *a == attr)
+            .map(|(a, _)| *a))
+        .or(svg::MAPPED_ATTRIBUTES
+            .iter()
+            .find(|(a, _)| *a == attr)
+            .map(|(a, _)| *a))
+}
+
 macro_rules! no_namespace_trait_methods {
     (
         $(
