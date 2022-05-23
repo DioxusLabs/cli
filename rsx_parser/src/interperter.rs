@@ -2,7 +2,8 @@ use dioxus::{
     core::{Attribute, NodeFactory, VNode},
     rsx::{BodyNode, CallBody, ElementAttr, IfmtInput},
 };
-use syn::{__private::ToTokens, parse2};
+use quote::ToTokens;
+use syn::parse2;
 
 use crate::{attributes::attrbute_to_static_str, build_element::build_element};
 
@@ -17,7 +18,10 @@ pub fn build<'a>(rsx: CallBody, factory: &NodeFactory<'a>) -> VNode<'a> {
 fn build_node<'a>(node: BodyNode, factory: &NodeFactory<'a>, key: &str) -> VNode<'a> {
     let bump = factory.bump();
     match node {
-        BodyNode::Text(text) => factory.text(format_args!("{}", text.value())),
+        BodyNode::Text(text) => {
+            let ifmt_input: IfmtInput = parse2(text.into_token_stream()).unwrap();
+            factory.text(format_args!("{}", ifmt_input.format_literal.value()))
+        }
         BodyNode::Element(el) => {
             let attributes: &mut Vec<Attribute> = bump.alloc(Vec::new());
             for attr in el.attributes {
@@ -43,14 +47,14 @@ fn build_node<'a>(node: BodyNode, factory: &NodeFactory<'a>, key: &str) -> VNode
                     ElementAttr::Meta(_) => None,
                 };
                 if let Some((name, value)) = result {
-                    let name = attrbute_to_static_str(&name).unwrap();
+                    let (name, namespace) = attrbute_to_static_str(&name).unwrap();
                     let value = bump.alloc(value.format_literal.value());
                     attributes.push(Attribute {
                         name,
                         value,
                         is_static: true,
                         is_volatile: false,
-                        namespace: None,
+                        namespace,
                     })
                 }
             }

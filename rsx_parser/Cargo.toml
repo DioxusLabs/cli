@@ -8,4 +8,5 @@ lalrpop = "0.19.7"
 
 [dependencies]
 dioxus = { path = "D:/Users/Desktop/github/dioxus", features = ["web", "ssr"] }
-syn = "1.0.95"
+syn = "1.0"
+quote = "1.0"
