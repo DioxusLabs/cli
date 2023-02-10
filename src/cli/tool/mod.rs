@@ -2,7 +2,7 @@ use crate::tools;
 
 use super::*;
 
-/// Build the Rust WASM app and all of its assets.
+/// Install and/or configure tools - Tailwind, Binaryen
 #[derive(Clone, Debug, Deserialize, Subcommand)]
 #[clap(name = "tool")]
 pub enum Tool {

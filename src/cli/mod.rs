@@ -47,7 +47,7 @@ pub enum Commands {
     /// Translate some source file into Dioxus code.
     Translate(translate::Translate),
 
-    /// Install and/or configure tools - Tailwind, Binaryen, Sass
+    /// Install and/or configure tools.
     #[clap(subcommand)]
     Tool(tool::Tool),
 

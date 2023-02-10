@@ -19,7 +19,7 @@ pub enum Tool {
 }
 
 pub fn tool_list() -> Vec<&'static str> {
-    vec!["binaryen", "sass", "tailwindcss"]
+    vec!["binaryen", "tailwindcss"]
 }
 
 pub fn app_path() -> PathBuf {
