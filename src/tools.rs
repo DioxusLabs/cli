@@ -133,7 +133,7 @@ impl Tool {
         match self {
             Self::Binaryen => "version_105",
             Self::Sass => "1.51.0",
-            Self::Tailwind => "v3.1.6",
+            Self::Tailwind => "latest",
         }
     }
 
@@ -161,7 +161,7 @@ impl Tool {
                     _ => "",
                 };
                 format!(
-                    "https://github.com/tailwindlabs/tailwindcss/releases/download/{version}/tailwindcss-{target}-x64{optional_ext}",
+                    "https://github.com/tailwindlabs/tailwindcss/releases/{version}/download/tailwindcss-{target}-x64{optional_ext}",
                     version = self.tool_version(),
                     target = self.target_platform(),
                     optional_ext = windows_extension
