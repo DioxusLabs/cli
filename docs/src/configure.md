@@ -42,7 +42,7 @@ You can combine different tools with `dioxus`.
    tailwindcss = { input = "main.css", config = "tailwind.config.js" }
    ```
    You can set two optional keys :
-    - input: path of the input CSS file (default value is "public/tailwind.css")
+    - input: path of the input CSS file (default value is "public/input.css")
     - config: path to the config file for Tailwind (default value is "src/tailwind.config.js")
 
     When building on `release` profile, Dioxus will run `tailwindcss` with the `--minify` option.
