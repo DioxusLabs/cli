@@ -28,7 +28,7 @@ impl Tool {
             }
             Tool::AppPath {} => {
                 if let Some(v) = tools::tools_path().to_str() {
-                    println!("{}", v);
+                    println!("{v}");
                 } else {
                     return custom_error!("Tools path get failed.");
                 }

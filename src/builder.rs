@@ -49,7 +49,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
     // [1] Build the .wasm module
     log::info!("🚅 Running build command...");
     let mut cmd = Command::new("cargo");
-    cmd.current_dir(&crate_dir)
+    cmd.current_dir(crate_dir)
         .arg("build")
         .arg("--target")
         .arg("wasm32-unknown-unknown")
@@ -98,12 +98,12 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
 
     let input_path = match executable {
         ExecutableType::Binary(name) | ExecutableType::Lib(name) => target_dir
-            .join(format!("wasm32-unknown-unknown/{}", release_type))
-            .join(format!("{}.wasm", name)),
+            .join(format!("wasm32-unknown-unknown/{release_type}"))
+            .join(format!("{name}.wasm")),
 
         ExecutableType::Example(name) => target_dir
-            .join(format!("wasm32-unknown-unknown/{}/examples", release_type))
-            .join(format!("{}.wasm", name)),
+            .join(format!("wasm32-unknown-unknown/{release_type}/examples"))
+            .join(format!("{name}.wasm")),
     };
 
     let bindgen_result = panic::catch_unwind(move || {
@@ -154,16 +154,14 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
                     }
                 }
             }
+        } else if !config.release {
+            log::warn!(
+                "This is a debug build - skipping Binaryen."
+            );
         } else {
-            if !config.release {
-                log::warn!(
-                    "This is a debug build - skipping Binaryen."
-                );
-            } else {
-                log::warn!(
-                    "Binaryen tool not found, you can use `dioxus tool add binaryen` to install it."
-                );
-            }
+            log::warn!(
+                "Binaryen tool not found, you can use `dioxus tool add binaryen` to install it."
+            );
         }
     }
 
@@ -193,7 +191,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
                     config_path,
                 ];
 
-                if config.release == true {
+                if config.release {
                     args.push("--minify");
                 }
                 
@@ -216,7 +214,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
         depth: 0,
     };
     if asset_dir.is_dir() {
-        for entry in std::fs::read_dir(&asset_dir)? {
+        for entry in std::fs::read_dir(asset_dir)? {
             let path = entry?.path();
             if path.is_file() {
                 std::fs::copy(&path, out_dir.join(path.file_name().unwrap()))?;

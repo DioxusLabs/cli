@@ -277,21 +277,21 @@ impl Tool {
         let command_file = match self {
             Tool::Binaryen => {
                 if cfg!(target_os = "windows") {
-                    format!("{}.exe", command)
+                    format!("{command}.exe")
                 } else {
                     command.to_string()
                 }
             }
             Tool::Sass => {
                 if cfg!(target_os = "windows") {
-                    format!("{}.bat", command)
+                    format!("{command}.bat")
                 } else {
                     command.to_string()
                 }
             }
             Tool::Tailwind => {
                 if cfg!(target_os = "windows") {
-                    format!("{}.exe", command)
+                    format!("{command}.exe")
                 } else {
                     command.to_string()
                 }
@@ -314,11 +314,11 @@ impl Tool {
 }
 
 pub fn extract_zip(file: &Path, target: &Path) -> anyhow::Result<()> {
-    let zip_file = std::fs::File::open(&file)?;
+    let zip_file = std::fs::File::open(file)?;
     let mut zip = zip::ZipArchive::new(zip_file)?;
 
     if !target.exists() {
-        let _ = std::fs::create_dir_all(target)?;
+        std::fs::create_dir_all(target)?;
     }
 
     for i in 0..zip.len() {
@@ -326,7 +326,7 @@ pub fn extract_zip(file: &Path, target: &Path) -> anyhow::Result<()> {
         if file.is_dir() {
             // dir
             let target = target.join(Path::new(&file.name().replace('\\', "")));
-            let _ = std::fs::create_dir_all(target)?;
+            std::fs::create_dir_all(target)?;
         } else {
             // file
             let file_path = target.join(Path::new(file.name()));
