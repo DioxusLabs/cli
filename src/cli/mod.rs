@@ -6,6 +6,7 @@ pub mod config;
 pub mod create;
 pub mod plugin;
 pub mod serve;
+pub mod tool;
 pub mod translate;
 pub mod version;
 
@@ -46,6 +47,10 @@ pub enum Commands {
     /// Translate some source file into Dioxus code.
     Translate(translate::Translate),
 
+    /// Install and/or configure tools - Tailwind, Binaryen, Sass
+    #[clap(subcommand)]
+    Tool(tool::Tool),
+
     /// Build, watch & serve the Rust WASM app and all of its assets.
     Serve(serve::Serve),
 
@@ -84,6 +89,7 @@ impl Commands {
             Commands::Plugin(_) => "plugin",
             Commands::Version(_) => "version",
             Commands::Autoformat(_) => "fmt",
+            Commands::Tool(_) => "tool",
         }
         .to_string()
     }

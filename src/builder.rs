@@ -174,7 +174,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
 
                 let input_path = match sub.get("input") {
                     Some(val) => val.as_str().unwrap(),
-                    None => "./public",
+                    None => "./public/input.css",
                 };
                 let config_path = match sub.get("config") {
                     Some(val) => val.as_str().unwrap(),
@@ -192,7 +192,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
                 if config.release == true {
                     args.push("--minify");
                 }
-
+                
                 tailwind.call("tailwindcss", args)?;
             }
         } else {

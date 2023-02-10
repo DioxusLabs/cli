@@ -24,6 +24,11 @@ async fn main() -> anyhow::Result<()> {
             .translate()
             .map_err(|e| anyhow!("🚫 Translation of HTML into RSX failed: {}", e)),
 
+        Tool(opts) => opts
+            .tool()
+            .await
+            .map_err(|e| anyhow!("🚫 Configuring tools failed: {}", e)),
+
         Build(opts) => opts
             .build()
             .map_err(|e| anyhow!("🚫 Building project failed: {}", e)),

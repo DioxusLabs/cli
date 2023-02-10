@@ -18,9 +18,9 @@ pub enum Tool {
     Tailwind,
 }
 
-// pub fn tool_list() -> Vec<&'static str> {
-//     vec!["binaryen", "sass", "tailwindcss"]
-// }
+pub fn tool_list() -> Vec<&'static str> {
+    vec!["binaryen", "sass", "tailwindcss"]
+}
 
 pub fn app_path() -> PathBuf {
     let data_local = dirs::data_local_dir().unwrap();
@@ -237,7 +237,7 @@ impl Tool {
             std::fs::rename(tool_path.join(dir_name), tool_path.join(self.name()))?;
         } else if self.extension() == "bin" {
             let bin_path = match self.target_platform() {
-                "windows" => tool_path.join(&dir_name).join(self.name()).join(".exe"),
+                "windows" => tool_path.join(&dir_name).join(String::from(self.name()) + ".exe"),
                 _ => tool_path.join(&dir_name).join(self.name()),
             };
             // Manualy creating tool directory because we directly download the binary via Github
