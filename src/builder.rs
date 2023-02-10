@@ -133,7 +133,7 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
         let info = dioxus_tools.get("binaryen").unwrap();
         let binaryen = crate::tools::Tool::Binaryen;
 
-        if binaryen.is_installed() {
+        if binaryen.is_installed() && config.release {
             if let Some(sub) = info.as_table() {
                 if sub.contains_key("wasm_opt")
                     && sub.get("wasm_opt").unwrap().as_bool().unwrap_or(false)
@@ -144,22 +144,26 @@ pub fn build(config: &CrateConfig, quiet: bool) -> Result<BuildResult> {
                         .join("dioxus")
                         .join(format!("{}_bg.wasm", dioxus_config.application.name));
                     if target_file.is_file() {
-                        let mut args = vec![
+                        let args = vec![
                             target_file.to_str().unwrap(),
                             "-o",
                             target_file.to_str().unwrap(),
+                            "-Oz"
                         ];
-                        if config.release == true {
-                            args.push("-Oz");
-                        }
                         binaryen.call("wasm-opt", args)?;
                     }
                 }
             }
         } else {
-            log::warn!(
-                "Binaryen tool not found, you can use `dioxus tool add binaryen` to install it."
-            );
+            if !config.release {
+                log::warn!(
+                    "This is a debug build - skipping Binaryen."
+                );
+            } else {
+                log::warn!(
+                    "Binaryen tool not found, you can use `dioxus tool add binaryen` to install it."
+                );
+            }
         }
     }
 
