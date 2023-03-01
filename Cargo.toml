@@ -13,7 +13,7 @@ license = "MIT/Apache-2.0"
 # cli core
 clap = { version = "3.0.14", features = ["derive"] }
 thiserror = "1.0.30"
-wasm-bindgen-cli-support = "0.2.79"
+wasm-bindgen-cli-support = "0.2.83"
 colored = "2.0.0"
 
 # features
@@ -36,6 +36,7 @@ regex = "1.5.4"
 chrono = "0.4.19"
 anyhow = "1.0.53"
 hyper = "0.14.17"
+hyper-rustls = "0.23.2"
 indicatif = "0.17.0-rc.11"
 subprocess = "0.2.9"
 
@@ -74,6 +75,8 @@ mlua = { version = "0.8.1", features = [
 ] }
 ctrlc = "3.2.3"
 # dioxus-rsx = "0.0.1"
+gitignore = "1.0.7"
+
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", features = [
     "hot-reload-context",
@@ -82,7 +85,6 @@ dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", features = [
     "serialize",
 ] }
 dioxus-autofmt = { git = "https://github.com/dioxuslabs/dioxus" }
-gitignore = "1.0.7"
 rsx-rosetta = { git = "https://github.com/dioxuslabs/dioxus" }
 
 [[bin]]
