@@ -255,9 +255,9 @@ impl Default for WindowsSettings {
             tsp: false,
             wix: None,
             icon_path: PathBuf::from("icons/icon.ico"),
-            webview_install_mode: WebviewInstallMode::Skip,
+            webview_install_mode: Default::default(),
             webview_fixed_runtime_path: None,
-            allow_downgrades: false,
+            allow_downgrades: true,
         }
     }
 }
