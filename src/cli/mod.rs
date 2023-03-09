@@ -1,5 +1,6 @@
 pub mod autoformat;
 pub mod build;
+pub mod bundle;
 pub mod cfg;
 pub mod clean;
 pub mod config;
@@ -43,6 +44,9 @@ pub enum Commands {
     /// Build the Rust WASM app and all of its assets.
     Build(build::Build),
 
+    /// Bundle the Rust desktop app and all of its assets.
+    Bundle(bundle::Bundle),
+
     /// Translate some source file into Dioxus code.
     Translate(translate::Translate),
 
@@ -84,6 +88,7 @@ impl Commands {
             Commands::Plugin(_) => "plugin",
             Commands::Version(_) => "version",
             Commands::Autoformat(_) => "fmt",
+            Commands::Bundle(_) => "bundle",
         }
         .to_string()
     }

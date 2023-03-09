@@ -34,6 +34,36 @@ pub struct ConfigOptsBuild {
     pub features: Option<Vec<String>>,
 }
 
+/// Config options for the bundling system.
+#[derive(Clone, Debug, Default, Deserialize, Parser)]
+pub struct ConfigOptsBundle {
+    /// Build in release mode [default: false]
+    #[clap(long)]
+    #[serde(default)]
+    pub release: bool,
+
+    // Use verbose output [default: false]
+    #[clap(long)]
+    #[serde(default)]
+    pub verbose: bool,
+
+    /// Build a example [default: ""]
+    #[clap(long)]
+    pub example: Option<String>,
+
+    /// Build with custom profile
+    #[clap(long)]
+    pub profile: Option<String>,
+
+    /// Build platform: support Web & Desktop [default: "default_platform"]
+    #[clap(long)]
+    pub platform: Option<String>,
+
+    /// Space separated list of features to activate
+    #[clap(long)]
+    pub features: Option<Vec<String>>,
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Parser)]
 pub struct ConfigOptsServe {
     /// The index HTML file to drive the bundling process [default: index.html]

@@ -45,3 +45,7 @@ script = []
 available = true
 
 required = []
+
+[bundler]
+identifier = "io.github.{{project-name}}"
+publisher = "{{project-name}}"

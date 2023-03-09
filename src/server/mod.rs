@@ -288,7 +288,7 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> R
 
     let mut router = Router::new().route("/_dioxus/ws", get(ws_handler));
     for proxy_config in config.dioxus_config.web.proxy.unwrap_or_default() {
-        router = proxy::add_proxy(router, &proxy_config )?;
+        router = proxy::add_proxy(router, &proxy_config)?;
     }
     router = router.fallback(get_service(file_service).handle_error(
         |error: std::io::Error| async move {
