@@ -28,7 +28,7 @@ impl DioxusConfig {
         };
 
         let cfg = toml::from_str::<DioxusConfig>(&std::fs::read_to_string(dioxus_conf_file)?)
-            .map_err(|err| crate::Error::Unique(format!("Failed to parse Dioxus.toml {:#?}", err)))
+            .map_err(|err| crate::Error::Unique(format!("Failed to parse Dioxus.toml\n{}", err)))
             .map(Some);
         match cfg {
             Ok(Some(mut cfg)) => {

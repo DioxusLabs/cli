@@ -1,6 +1,6 @@
-use std::{env::current_dir, str::FromStr};
+use std::str::FromStr;
 
-use tauri_bundler::{BundleSettings, PackageSettings, SettingsBuilder};
+use tauri_bundler::{PackageSettings, SettingsBuilder};
 
 use super::*;
 use crate::{build_desktop, cfg::ConfigOptsBundle};
@@ -97,7 +97,7 @@ impl Bundle {
                 .set_src_path(Some(crate_config.crate_dir.display().to_string())),
         ];
 
-        let settings = SettingsBuilder::new()
+        let mut settings = SettingsBuilder::new()
             .project_out_directory(crate_config.out_dir)
             .package_settings(PackageSettings {
                 product_name: crate_config.dioxus_config.application.name.clone(),
@@ -108,15 +108,16 @@ impl Bundle {
                 default_run: Some(crate_config.dioxus_config.application.name.clone()),
             })
             .binaries(binaries)
-            .bundle_settings(crate_config.dioxus_config.bundle.into())
-            .package_types(
-                self.package
-                    .unwrap_or_default()
+            .bundle_settings(crate_config.dioxus_config.bundle.into());
+        if let Some(packages) = self.package {
+            settings = settings.package_types(
+                packages
                     .into_iter()
                     .map(|p| p.parse::<PackageType>().unwrap().into())
                     .collect(),
-            )
-            .build();
+            );
+        }
+        let settings = settings.build();
 
         tauri_bundler::bundle::bundle_project(settings.unwrap()).unwrap();
 
