@@ -132,9 +132,9 @@ impl From<BundleConfig> for tauri_bundler::BundleSettings {
             short_description: val.short_description,
             long_description: val.long_description,
             external_bin: val.external_bin,
-            deb: val.deb.unwrap_or_default().into(),
-            macos: val.macos.unwrap_or_default().into(),
-            windows: val.windows.unwrap_or_default().into(),
+            deb: val.deb.map(Into::into).unwrap_or_default(),
+            macos: val.macos.map(Into::into).unwrap_or_default(),
+            windows: val.windows.map(Into::into).unwrap_or_default(),
             ..Default::default()
         }
     }
@@ -176,8 +176,9 @@ pub struct WixSettings {
 impl From<WixSettings> for tauri_bundler::WixSettings {
     fn from(val: WixSettings) -> Self {
         tauri_bundler::WixSettings {
-            language: tauri_bundler::bundle::WixLanguage(
-                val.language
+            language: tauri_bundler::bundle::WixLanguage({
+                let mut languages: Vec<_> = val
+                    .language
                     .iter()
                     .map(|l| {
                         (
@@ -187,8 +188,12 @@ impl From<WixSettings> for tauri_bundler::WixSettings {
                             },
                         )
                     })
-                    .collect(),
-            ),
+                    .collect();
+                if languages.is_empty() {
+                    languages.push(("en-US".into(), Default::default()));
+                }
+                languages
+            }),
             template: val.template,
             fragment_paths: val.fragment_paths,
             component_group_refs: val.component_group_refs,
@@ -309,7 +314,7 @@ impl WebviewInstallMode {
 
 impl Default for WebviewInstallMode {
     fn default() -> Self {
-        Self::DownloadBootstrapper { silent: true }
+        Self::OfflineInstaller { silent: false }
     }
 }
 
