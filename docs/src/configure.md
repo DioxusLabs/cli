@@ -243,7 +243,7 @@ identifier = "com.dioxus.app"
 # Bundle publisher
 publisher = "dioxus"
 
-# Bundle icon
+# Bundle icon. On windows, the icon file will default to `icons/icon.ico`
 icon = ["assets/icon.png"]
 
 # Bundle resources
