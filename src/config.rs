@@ -245,26 +245,10 @@ pub struct WindowsSettings {
     pub timestamp_url: Option<String>,
     pub tsp: bool,
     pub wix: Option<WixSettings>,
-    pub icon_path: PathBuf,
+    pub icon_path: Option<PathBuf>,
     pub webview_install_mode: WebviewInstallMode,
     pub webview_fixed_runtime_path: Option<PathBuf>,
     pub allow_downgrades: bool,
-}
-
-impl Default for WindowsSettings {
-    fn default() -> Self {
-        Self {
-            digest_algorithm: None,
-            certificate_thumbprint: None,
-            timestamp_url: None,
-            tsp: false,
-            wix: None,
-            icon_path: PathBuf::from("icons/icon.ico"),
-            webview_install_mode: Default::default(),
-            webview_fixed_runtime_path: None,
-            allow_downgrades: true,
-        }
-    }
 }
 
 impl From<WindowsSettings> for tauri_bundler::WindowsSettings {
@@ -275,7 +259,7 @@ impl From<WindowsSettings> for tauri_bundler::WindowsSettings {
             timestamp_url: val.timestamp_url,
             tsp: val.tsp,
             wix: val.wix.map(Into::into),
-            icon_path: val.icon_path,
+            icon_path: val.icon_path.unwrap_or("icons/icon.ico".into()),
             webview_install_mode: val.webview_install_mode.into(),
             webview_fixed_runtime_path: val.webview_fixed_runtime_path,
             allow_downgrades: val.allow_downgrades,

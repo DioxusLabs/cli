@@ -1,6 +1,6 @@
-use std::str::FromStr;
+use std::{fs::create_dir_all, str::FromStr};
 
-use tauri_bundler::{PackageSettings, SettingsBuilder};
+use tauri_bundler::{BundleSettings, PackageSettings, SettingsBuilder};
 
 use super::*;
 use crate::{build_desktop, cfg::ConfigOptsBundle};
@@ -97,6 +97,36 @@ impl Bundle {
                 .set_src_path(Some(crate_config.crate_dir.display().to_string())),
         ];
 
+        let mut bundle_settings: BundleSettings = crate_config.dioxus_config.bundle.clone().into();
+        if cfg!(windows) {
+            let windows_icon_override = crate_config
+                .dioxus_config
+                .bundle
+                .windows
+                .as_ref()
+                .map(|w| &w.icon_path);
+            if windows_icon_override.is_none() {
+                let icon_path = bundle_settings
+                    .icon
+                    .as_ref()
+                    .and_then(|icons| icons.first());
+                let icon_path = if let Some(icon_path) = icon_path {
+                    icon_path.into()
+                } else {
+                    let path = PathBuf::from("./icons/icon.ico");
+                    // create the icon if it doesn't exist
+                    if !path.exists() {
+                        create_dir_all(path.parent().unwrap()).unwrap();
+                        let mut file = File::create(&path).unwrap();
+                        file.write_all(include_bytes!("../../assets/icon.ico"))
+                            .unwrap();
+                    }
+                    path
+                };
+                bundle_settings.windows.icon_path = icon_path;
+            }
+        }
+
         let mut settings = SettingsBuilder::new()
             .project_out_directory(crate_config.out_dir)
             .package_settings(PackageSettings {
@@ -108,7 +138,7 @@ impl Bundle {
                 default_run: Some(crate_config.dioxus_config.application.name.clone()),
             })
             .binaries(binaries)
-            .bundle_settings(crate_config.dioxus_config.bundle.into());
+            .bundle_settings(bundle_settings);
         if let Some(packages) = self.package {
             settings = settings.package_types(
                 packages
