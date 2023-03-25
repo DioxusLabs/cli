@@ -8,7 +8,7 @@ use mlua::{Lua, Table};
 use serde_json::json;
 
 use crate::{
-    tools::{app_path, clone_repo},
+    tools::{clone_repo},
     CrateConfig,
 };
 
@@ -289,8 +289,7 @@ impl PluginManager {
     }
 
     pub fn init_plugin_dir() -> PathBuf {
-        let app_path = app_path();
-        let plugin_path = app_path.join("plugins");
+        let plugin_path = PathBuf::from("./.dioxus/library");
         if !plugin_path.is_dir() {
             log::info!("📖 Start to init plugin library ...");
             let url = "https://github.com/DioxusLabs/cli-plugin-library";
