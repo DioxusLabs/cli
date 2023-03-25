@@ -21,9 +21,16 @@ impl DioxusConfig {
         let Ok(crate_dir) = crate::cargo::crate_root() else { return Ok(None); };
 
         // we support either `Dioxus.toml` or `Cargo.toml`
-        let Some(dioxus_conf_file) = acquire_dioxus_toml(crate_dir) else {
+        let Some(dioxus_conf_file) = acquire_dioxus_toml(&crate_dir) else {
             return Ok(None);
         };
+
+        // init .dioxus folder for project
+        let dioxus_dir = crate_dir.join(".dioxus");
+        if !dioxus_dir.is_dir() {
+            std::fs::create_dir(&dioxus_dir)?;
+            std::fs::create_dir(&dioxus_dir.join("plugins"))?;
+        }
 
         toml::from_str::<DioxusConfig>(&std::fs::read_to_string(dioxus_conf_file)?)
             .map_err(|_| crate::Error::Unique("Dioxus.toml parse failed".into()))
@@ -31,7 +38,7 @@ impl DioxusConfig {
     }
 }
 
-fn acquire_dioxus_toml(dir: PathBuf) -> Option<PathBuf> {
+fn acquire_dioxus_toml(dir: &PathBuf) -> Option<PathBuf> {
     // prefer uppercase
     if dir.join("Dioxus.toml").is_file() {
         return Some(dir.join("Dioxus.toml"));

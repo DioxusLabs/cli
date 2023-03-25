@@ -1,16 +1,13 @@
 use std::{
     io::{Read, Write},
     path::PathBuf,
-    sync::Mutex,
+    sync::Mutex, env::current_dir,
 };
 
 use mlua::{Lua, Table};
 use serde_json::json;
 
-use crate::{
-    tools::{clone_repo},
-    CrateConfig,
-};
+use crate::{tools::clone_repo, CrateConfig};
 
 use self::{
     interface::{
@@ -33,48 +30,36 @@ impl PluginManager {
     pub fn init(config: toml::Value) -> anyhow::Result<()> {
         let config = PluginConfig::from_toml_value(config);
 
-        if !config.available {
-            return Ok(());
-        }
+        let lua = LUA.lock().expect("Lua runtime load failed.");
 
-        let lua = LUA.lock().unwrap();
-
-        let manager = lua.create_table().unwrap();
-        let name_index = lua.create_table().unwrap();
+        let manager = lua.create_table().expect("Lua runtime init failed.");
+        let name_index = lua.create_table().expect("Lua runtime init failed.");
 
         let plugin_dir = Self::init_plugin_dir();
 
         let api = lua.create_table().unwrap();
 
-        api.set("log", PluginLogger).unwrap();
-        api.set("command", PluginCommander).unwrap();
-        api.set("network", PluginNetwork).unwrap();
-        api.set("dirs", PluginDirs).unwrap();
-        api.set("fs", PluginFileSystem).unwrap();
-        api.set("path", PluginPath).unwrap();
-        api.set("os", PluginOS).unwrap();
+        api.set("log", PluginLogger).expect("Plugin: `log` library init faield.");
+        api.set("command", PluginCommander).expect("Plugin: `command` library init faield.");
+        api.set("network", PluginNetwork).expect("Plugin: `network` library init faield.");
+        api.set("dirs", PluginDirs).expect("Plugin: `dirs` library init faield.");
+        api.set("fs", PluginFileSystem).expect("Plugin: `fs` library init faield.");
+        api.set("path", PluginPath).expect("Plugin: `path` library init faield.");
+        api.set("os", PluginOS).expect("Plugin: `os` library init faield.");
 
-        lua.globals().set("plugin_lib", api).unwrap();
+        lua.globals().set("plugin_lib", api).expect("Plugin: library startup failed.");
         lua.globals()
-            .set("library_dir", plugin_dir.to_str().unwrap())
+            .set("library_dir", plugin_dir.join("core").to_str().unwrap())
             .unwrap();
         lua.globals().set("config_info", config.clone())?;
 
         let mut index: u32 = 1;
         let dirs = std::fs::read_dir(&plugin_dir)?;
 
-        let mut path_list = dirs
+        let path_list = dirs
             .filter(|v| v.is_ok())
             .map(|v| (v.unwrap().path(), false))
             .collect::<Vec<(PathBuf, bool)>>();
-        for i in &config.loader {
-            let path = PathBuf::from(i);
-            if !path.is_dir() {
-                // for loader dir, we need check first, because we need give a error log.
-                log::error!("Plugin loader: {:?} path is not a exists directory.", path);
-            }
-            path_list.push((path, true));
-        }
 
         for entry in path_list {
             let plugin_dir = entry.0.to_path_buf();
@@ -143,7 +128,7 @@ impl PluginManager {
                                         }
                                         Ok(false) => {
                                             log::warn!(
-                                                "Plugin init function result is `false`, init failed."
+                                                "Plugin rejected init, read plugin docs to get more details."
                                             );
                                         }
                                         Err(e) => {
@@ -224,7 +209,7 @@ impl PluginManager {
     }
 
     pub fn on_serve_start(crate_config: &CrateConfig) -> anyhow::Result<()> {
-        let lua = LUA.lock().unwrap();
+        let lua = LUA.lock().expect("Lua runtime load failed.");
 
         if !lua.globals().contains_key("manager")? {
             return Ok(());
@@ -245,7 +230,7 @@ impl PluginManager {
     }
 
     pub fn on_serve_rebuild(timestamp: i64, files: Vec<PathBuf>) -> anyhow::Result<()> {
-        let lua = LUA.lock().unwrap();
+        let lua = LUA.lock().expect("Lua runtime load failed.");
 
         let manager = lua.globals().get::<_, Table>("manager")?;
 
@@ -268,7 +253,7 @@ impl PluginManager {
     }
 
     pub fn on_serve_shutdown(crate_config: &CrateConfig) -> anyhow::Result<()> {
-        let lua = LUA.lock().unwrap();
+        let lua = LUA.lock().expect("Lua runtime load failed.");
 
         if !lua.globals().contains_key("manager")? {
             return Ok(());
@@ -289,11 +274,12 @@ impl PluginManager {
     }
 
     pub fn init_plugin_dir() -> PathBuf {
-        let plugin_path = PathBuf::from("./.dioxus/library");
-        if !plugin_path.is_dir() {
+        let plugin_path = current_dir().unwrap().join(".dioxus").join("plugins");
+        let core_path = plugin_path.join("core");
+        if !core_path.is_dir() {
             log::info!("📖 Start to init plugin library ...");
             let url = "https://github.com/DioxusLabs/cli-plugin-library";
-            clone_repo(&plugin_path, url).unwrap();
+            clone_repo(&core_path, url, "v2").expect("Init Plugin Library faield.");
         }
         plugin_path
     }

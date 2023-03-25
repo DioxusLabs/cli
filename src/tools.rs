@@ -3,13 +3,13 @@ use std::{
     process::Command,
 };
 
-pub fn clone_repo(dir: &Path, url: &str) -> anyhow::Result<()> {
+pub fn clone_repo(dir: &Path, url: &str, branch: &str) -> anyhow::Result<()> {
     let target_dir = dir.parent().unwrap();
     let dir_name = dir.file_name().unwrap();
 
     let mut cmd = Command::new("git");
     let cmd = cmd.current_dir(target_dir);
-    let _res = cmd.arg("clone").arg(url).arg(dir_name).output()?;
+    let _res = cmd.arg("clone").arg("-b").arg(branch).arg(url).arg(dir_name).output()?;
     Ok(())
 }
 
