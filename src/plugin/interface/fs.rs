@@ -54,6 +54,19 @@ impl UserData for PluginFileSystem {
 
             Ok(true)
         });
+        methods.add_function("move_file", |_, args: (String, String)| {
+            let file = PathBuf::from(args.0);
+            let target = PathBuf::from(args.1);
+            if !file.is_file() {
+                return Ok(false);
+            }
+            let options = fs_extra::file::CopyOptions::new();
+            let res = fs_extra::file::move_file(file, target, &options);
+            if res.is_err() {
+                return Ok(false);
+            }
+            return Ok(true)
+        });
         methods.add_function("unzip_file", |_, args: (String, String)| {
             let file = PathBuf::from(args.0);
             let target = PathBuf::from(args.1);
