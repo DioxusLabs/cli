@@ -291,7 +291,7 @@ impl PluginManager {
                 .load(mlua::chunk!(
                     local list = {}
                     for key, value in ipairs(manager) do
-                        table.insert(list, {name = value.name, loader = value.inner.from_loader})
+                        table.insert(list, {name = value.name, version = value.version})
                     end
                     return list
                 ))
@@ -299,17 +299,22 @@ impl PluginManager {
                 .unwrap_or_default();
             for i in list {
                 let name = i.get::<_, String>("name").unwrap();
-                let loader = i.get::<_, bool>("loader").unwrap();
-
-                let text = if loader {
-                    format!("{name} [:loader]")
-                } else {
-                    name
-                };
+                let version = i.get::<_, String>("version").unwrap();
+                let text = format!("{name} [{version}]");
                 res.push(text);
             }
         }
 
         res
     }
+
+    pub fn remote_install_plugin(url: String, branch: String) -> anyhow::Result<()> {
+        let plugin_dir = Self::init_plugin_dir();
+        let binding = url.split("/").collect::<Vec<&str>>();
+        let repo_name = binding.last().unwrap();
+        clone_repo(&plugin_dir.join(repo_name), &url, &branch)?;
+        println!("{plugin_dir:?} | {url} | {branch}");
+        Ok(())
+    }
+
 }
