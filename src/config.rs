@@ -29,7 +29,6 @@ impl DioxusConfig {
         let dioxus_dir = crate_dir.join(".dioxus");
         if !dioxus_dir.is_dir() {
             std::fs::create_dir(&dioxus_dir)?;
-            std::fs::create_dir(&dioxus_dir.join("plugins"))?;
         }
 
         toml::from_str::<DioxusConfig>(&std::fs::read_to_string(dioxus_conf_file)?)

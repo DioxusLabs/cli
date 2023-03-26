@@ -1,11 +1,10 @@
 use std::{
     io::{Read, Write},
     path::PathBuf,
-    sync::Mutex, env::current_dir,
+    sync::Mutex, env::current_dir, fs::create_dir,
 };
 
 use mlua::{Lua, Table};
-use serde_json::json;
 
 use crate::{tools::clone_repo, CrateConfig};
 
@@ -14,10 +13,11 @@ use self::{
         command::PluginCommander, dirs::PluginDirs, fs::PluginFileSystem, log::PluginLogger,
         network::PluginNetwork, os::PluginOS, path::PluginPath, PluginInfo,
     },
-    types::PluginConfig,
+    types::PluginConfig, status::{get_plugin_status, set_plugin_status, PluginStatus},
 };
 
 pub mod interface;
+pub mod status;
 mod types;
 
 lazy_static::lazy_static! {
@@ -30,24 +30,24 @@ impl PluginManager {
     pub fn init(config: toml::Value) -> anyhow::Result<()> {
         let config = PluginConfig::from_toml_value(config);
 
-        let lua = LUA.lock().expect("Lua runtime load failed.");
+        let lua = LUA.lock().expect("Lua runtime load failed");
 
-        let manager = lua.create_table().expect("Lua runtime init failed.");
-        let name_index = lua.create_table().expect("Lua runtime init failed.");
+        let manager = lua.create_table().expect("Lua runtime init failed");
+        let name_index = lua.create_table().expect("Lua runtime init failed");
 
         let plugin_dir = Self::init_plugin_dir();
 
         let api = lua.create_table().unwrap();
 
-        api.set("log", PluginLogger).expect("Plugin: `log` library init faield.");
-        api.set("command", PluginCommander).expect("Plugin: `command` library init faield.");
-        api.set("network", PluginNetwork).expect("Plugin: `network` library init faield.");
-        api.set("dirs", PluginDirs).expect("Plugin: `dirs` library init faield.");
-        api.set("fs", PluginFileSystem).expect("Plugin: `fs` library init faield.");
-        api.set("path", PluginPath).expect("Plugin: `path` library init faield.");
-        api.set("os", PluginOS).expect("Plugin: `os` library init faield.");
+        api.set("log", PluginLogger).expect("Plugin: `log` library init faield");
+        api.set("command", PluginCommander).expect("Plugin: `command` library init faield");
+        api.set("network", PluginNetwork).expect("Plugin: `network` library init faield");
+        api.set("dirs", PluginDirs).expect("Plugin: `dirs` library init faield");
+        api.set("fs", PluginFileSystem).expect("Plugin: `fs` library init faield");
+        api.set("path", PluginPath).expect("Plugin: `path` library init faield");
+        api.set("os", PluginOS).expect("Plugin: `os` library init faield");
 
-        lua.globals().set("plugin_lib", api).expect("Plugin: library startup failed.");
+        lua.globals().set("plugin_lib", api).expect("Plugin: library startup failed");
         lua.globals()
             .set("library_dir", plugin_dir.join("core").to_str().unwrap())
             .unwrap();
@@ -86,7 +86,7 @@ impl PluginManager {
                             {
                                 // found same name plugin, intercept load
                                 log::warn!(
-                                    "Plugin {} has been intercepted. [mulit-load]",
+                                    "Plugin `{}` has been intercepted. [mulit-load]",
                                     info.name
                                 );
                                 continue;
@@ -95,25 +95,16 @@ impl PluginManager {
                             info.inner.from_loader = from_loader;
 
                             // call `on_init` if file "dcp.json" not exists
-                            let dcp_file = plugin_dir.join("dcp.json");
-                            if !dcp_file.is_file() {
+                            let plugin_status = get_plugin_status(&info.name);
+                            if plugin_status.is_none() {
                                 if let Some(func) = info.clone().on_init {
                                     let result = func.call::<_, bool>(());
                                     match result {
                                         Ok(true) => {
-                                            // plugin init success, create `dcp.json` file.
-                                            let mut file = std::fs::File::create(dcp_file).unwrap();
-                                            let value = json!({
-                                                "name": info.name,
-                                                "author": info.author,
-                                                "repository": info.repository,
-                                                "version": info.version,
-                                                "generate_time": chrono::Local::now().timestamp(),
+                                            set_plugin_status(&info.name, PluginStatus {
+                                                version: info.version.clone(),
+                                                startup_timestamp: chrono::Local::now().timestamp(),
                                             });
-                                            let buffer =
-                                                serde_json::to_string_pretty(&value).unwrap();
-                                            let buffer = buffer.as_bytes();
-                                            file.write_all(buffer).unwrap();
 
                                             // insert plugin-info into plugin-manager
                                             if let Ok(index) =
@@ -128,7 +119,7 @@ impl PluginManager {
                                         }
                                         Ok(false) => {
                                             log::warn!(
-                                                "Plugin rejected init, read plugin docs to get more details."
+                                                "Plugin rejected init, read plugin docs to get more details"
                                             );
                                         }
                                         Err(e) => {
@@ -149,6 +140,7 @@ impl PluginManager {
                         Err(_e) => {
                             let dir_name = plugin_dir.file_name().unwrap().to_str().unwrap();
                             log::error!("Plugin '{dir_name}' load failed.");
+                            log::error!("Error Detail: {_e}")
                         }
                     }
                 }
@@ -275,11 +267,18 @@ impl PluginManager {
 
     pub fn init_plugin_dir() -> PathBuf {
         let plugin_path = current_dir().unwrap().join(".dioxus").join("plugins");
+        if !plugin_path.is_dir() {
+            create_dir(&plugin_path).expect("Create plugin directory failed.");
+            let mut plugin_lock_file = std::fs::File::create(plugin_path.join("Plugin.lock")).expect("Plugin file init failed.");
+            let content = "{}".as_bytes();
+            plugin_lock_file.write_all(content).expect("Plugin file init failed.");
+        }
         let core_path = plugin_path.join("core");
         if !core_path.is_dir() {
             log::info!("📖 Start to init plugin library ...");
             let url = "https://github.com/DioxusLabs/cli-plugin-library";
             clone_repo(&core_path, url, "v2").expect("Init Plugin Library faield.");
+            log::info!("🔰 Plugin library dowonload done.");
         }
         plugin_path
     }
