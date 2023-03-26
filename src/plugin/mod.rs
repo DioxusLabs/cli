@@ -312,8 +312,14 @@ impl PluginManager {
         let plugin_dir = Self::init_plugin_dir();
         let binding = url.split("/").collect::<Vec<&str>>();
         let repo_name = binding.last().unwrap();
-        clone_repo(&plugin_dir.join(repo_name), &url, &branch)?;
-        println!("{plugin_dir:?} | {url} | {branch}");
+
+        let target_path = plugin_dir.join(repo_name);
+
+        if target_path.is_dir() {
+            return Err(anyhow::anyhow!("Plugin directory exists."));
+        }
+
+        clone_repo(&target_path, &url, &branch)?;
         Ok(())
     }
 
