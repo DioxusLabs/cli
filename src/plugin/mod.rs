@@ -316,7 +316,7 @@ impl PluginManager {
         let target_path = plugin_dir.join(repo_name);
 
         if target_path.is_dir() {
-            return Err(anyhow::anyhow!("Plugin directory exists."));
+            return Err(anyhow::anyhow!("Plugin directory exist."));
         }
 
         clone_repo(&target_path, &url, &branch)?;
