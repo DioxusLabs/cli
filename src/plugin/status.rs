@@ -1,6 +1,8 @@
-use std::{env::current_dir, io::{Read, Write}, collections::HashMap};
+use std::{io::{Read, Write}, collections::HashMap};
 
 use serde::{Serialize, Deserialize};
+
+use crate::crate_root;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginStatus {
@@ -9,7 +11,7 @@ pub struct PluginStatus {
 }
 
 pub fn plugins_status() -> HashMap<String, PluginStatus> {
-    let plugin_path = current_dir().unwrap().join(".dioxus").join("plugins");
+    let plugin_path = crate_root().unwrap().join(".dioxus").join("plugins");
     let mut lock_file = std::fs::File::open(plugin_path.join("Plugin.lock")).unwrap();
     let mut lock_content = String::new();
     if let Err(_) = lock_file.read_to_string(&mut lock_content) {
@@ -28,7 +30,7 @@ pub fn set_plugin_status(name: &str, info: PluginStatus) {
     let mut plugins = plugins_status();
     plugins.insert(name.to_string(), info);
     
-    let plugin_path = current_dir().unwrap().join(".dioxus").join("plugins");
+    let plugin_path = crate_root().unwrap().join(".dioxus").join("plugins");
     let mut lock_file = std::fs::File::create(plugin_path.join("Plugin.lock")).unwrap();
 
     let content = serde_json::to_string(&plugins).unwrap();

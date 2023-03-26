@@ -1,12 +1,12 @@
 use std::{
     io::{Read, Write},
     path::PathBuf,
-    sync::Mutex, env::current_dir, fs::create_dir,
+    sync::Mutex, fs::create_dir,
 };
 
 use mlua::{Lua, Table};
 
-use crate::{tools::clone_repo, CrateConfig};
+use crate::{tools::clone_repo, CrateConfig, crate_root};
 
 use self::{
     interface::{
@@ -266,7 +266,7 @@ impl PluginManager {
     }
 
     pub fn init_plugin_dir() -> PathBuf {
-        let plugin_path = current_dir().unwrap().join(".dioxus").join("plugins");
+        let plugin_path = crate_root().unwrap().join(".dioxus").join("plugins");
         if !plugin_path.is_dir() {
             create_dir(&plugin_path).expect("Create plugin directory failed.");
             let mut plugin_lock_file = std::fs::File::create(plugin_path.join("Plugin.lock")).expect("Plugin file init failed.");
