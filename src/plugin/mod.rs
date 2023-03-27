@@ -94,8 +94,22 @@ impl PluginManager {
                             info.inner.plugin_dir = current_plugin_dir;
                             info.inner.from_loader = from_loader;
 
-                            // call `on_init` if file "dcp.json" not exists
-                            let plugin_status = get_plugin_status(&info.name);
+                            // call `on_init` if plugin info not in the `Plugin.lock` file
+                            let mut plugin_status = get_plugin_status(&info.name);
+                            if plugin_status.is_some() {
+                                let status = plugin_status.clone().unwrap();
+                                if status.version != info.version {
+                                    log::warn!("Plugin locked version is `{0}` but loading version is `{1}`", status.version, info.version);
+                                    log::warn!("Do you want to re-init plugin? (Y/N)");
+                                    log::warn!("If you choose `N` this warning has always existed until you re-init it.");
+                                    let mut input = String::new();
+                                    let _ = std::io::stdin().read_line(&mut input);
+                                    if input.trim().to_uppercase() == "Y" {
+                                        plugin_status = None;
+                                    }
+                                }
+                            }
+
                             if plugin_status.is_none() {
                                 if let Some(func) = info.clone().on_init {
                                     let result = func.call::<_, bool>(());
