@@ -12,6 +12,8 @@ pub enum Plugin {
     Add {
         #[clap(long, default_value_t)]
         git: String,
+        #[clap(long, default_value = "main")]
+        branch: String,
     },
 }
 
@@ -30,9 +32,9 @@ impl Plugin {
                     log::error!("Plugin path get failed.");
                 }
             }
-            Plugin::Add { git } => {
+            Plugin::Add { git, branch } => {
                 if !git.is_empty() {
-                    if let Err(e) = crate::plugin::PluginManager::remote_install_plugin(git, "main".to_string()) {
+                    if let Err(e) = crate::plugin::PluginManager::remote_install_plugin(git, branch) {
                         log::error!("Plugin install failed: {e}");
                     } else {
                         println!("🔰 Plugin install done.");
