@@ -92,7 +92,6 @@ impl PluginManager {
                                 continue;
                             }
                             info.inner.plugin_dir = current_plugin_dir;
-                            info.inner.from_loader = from_loader;
 
                             // call `on_init` if plugin info not in the `Plugin.lock` file
                             let mut plugin_status = get_plugin_status(&info.name);
@@ -110,6 +109,7 @@ impl PluginManager {
                                 }
                             }
 
+                            // if plugin don't have init info, then call init function.
                             if plugin_status.is_none() {
                                 if let Some(func) = info.clone().on_init {
                                     let result = func.call::<_, bool>(());
@@ -118,6 +118,7 @@ impl PluginManager {
                                             set_plugin_status(&info.name, PluginStatus {
                                                 version: info.version.clone(),
                                                 startup_timestamp: chrono::Local::now().timestamp(),
+                                                plugin_path: plugin_dir.to_str().unwrap().to_string(),
                                             });
 
                                             // insert plugin-info into plugin-manager

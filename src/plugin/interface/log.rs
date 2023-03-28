@@ -5,23 +5,23 @@ pub struct PluginLogger;
 impl UserData for PluginLogger {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_function("trace", |_, info: String| {
-            log::trace!("{}", info);
+            log::trace!("[plugin] {}", info);
             Ok(())
         });
         methods.add_function("info", |_, info: String| {
-            log::info!("{}", info);
+            log::info!("[plugin] {}", info);
             Ok(())
         });
         methods.add_function("debug", |_, info: String| {
-            log::debug!("{}", info);
+            log::debug!("[plugin] {}", info);
             Ok(())
         });
         methods.add_function("warn", |_, info: String| {
-            log::warn!("{}", info);
+            log::warn!("[plugin] {}", info);
             Ok(())
         });
         methods.add_function("error", |_, info: String| {
-            log::error!("{}", info);
+            log::error!("[plugin] {}", info);
             Ok(())
         });
     }

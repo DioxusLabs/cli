@@ -8,6 +8,7 @@ use crate::crate_root;
 pub struct PluginStatus {
     pub version: String,
     pub startup_timestamp: i64,
+    pub plugin_path: String,
 }
 
 pub fn plugins_status() -> HashMap<String, PluginStatus> {

@@ -95,22 +95,17 @@ impl<'lua> ToLua<'lua> for PluginInfo<'lua> {
 #[derive(Debug, Clone, Default)]
 pub struct PluginInner {
     pub plugin_dir: String,
-    pub from_loader: bool,
 }
 
 impl<'lua> FromLua<'lua> for PluginInner {
     fn from_lua(lua_value: mlua::Value<'lua>, _lua: &'lua mlua::Lua) -> mlua::Result<Self> {
         let mut res = Self {
             plugin_dir: String::new(),
-            from_loader: false,
         };
 
         if let mlua::Value::Table(t) = lua_value {
             if let Ok(v) = t.get::<_, String>("plugin_dir") {
                 res.plugin_dir = v;
-            }
-            if let Ok(v) = t.get::<_, bool>("from_loader") {
-                res.from_loader = v;
             }
         }
         Ok(res)
@@ -122,7 +117,6 @@ impl<'lua> ToLua<'lua> for PluginInner {
         let res = lua.create_table()?;
 
         res.set("plugin_dir", self.plugin_dir)?;
-        res.set("from_loader", self.from_loader)?;
 
         Ok(mlua::Value::Table(res))
     }
