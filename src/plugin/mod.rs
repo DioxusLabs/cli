@@ -1,19 +1,22 @@
 use std::{
+    fs::create_dir,
     io::{Read, Write},
     path::PathBuf,
-    sync::Mutex, fs::create_dir,
+    sync::Mutex,
 };
 
 use mlua::{Lua, Table};
+use serde_json::json;
 
-use crate::{tools::clone_repo, CrateConfig, crate_root};
+use crate::{crate_root, tools::clone_repo, CrateConfig};
 
 use self::{
     interface::{
         command::PluginCommander, dirs::PluginDirs, fs::PluginFileSystem, log::PluginLogger,
         network::PluginNetwork, os::PluginOS, path::PluginPath, PluginInfo,
     },
-    types::PluginConfig, status::{get_plugin_status, set_plugin_status, PluginStatus},
+    status::{get_plugin_status, set_plugin_status, PluginStatus},
+    types::PluginConfig,
 };
 
 pub mod interface;
@@ -39,15 +42,24 @@ impl PluginManager {
 
         let api = lua.create_table().unwrap();
 
-        api.set("log", PluginLogger).expect("Plugin: `log` library init faield");
-        api.set("command", PluginCommander).expect("Plugin: `command` library init faield");
-        api.set("network", PluginNetwork).expect("Plugin: `network` library init faield");
-        api.set("dirs", PluginDirs).expect("Plugin: `dirs` library init faield");
-        api.set("fs", PluginFileSystem).expect("Plugin: `fs` library init faield");
-        api.set("path", PluginPath).expect("Plugin: `path` library init faield");
-        api.set("os", PluginOS).expect("Plugin: `os` library init faield");
+        api.set("log", PluginLogger)
+            .expect("Plugin: `log` library init faield");
+        api.set("command", PluginCommander)
+            .expect("Plugin: `command` library init faield");
+        api.set("network", PluginNetwork)
+            .expect("Plugin: `network` library init faield");
+        api.set("dirs", PluginDirs)
+            .expect("Plugin: `dirs` library init faield");
+        api.set("fs", PluginFileSystem)
+            .expect("Plugin: `fs` library init faield");
+        api.set("path", PluginPath)
+            .expect("Plugin: `path` library init faield");
+        api.set("os", PluginOS)
+            .expect("Plugin: `os` library init faield");
 
-        lua.globals().set("plugin_lib", api).expect("Plugin: library startup failed");
+        lua.globals()
+            .set("plugin_lib", api)
+            .expect("Plugin: library startup failed");
         lua.globals()
             .set("library_dir", plugin_dir.join("core").to_str().unwrap())
             .unwrap();
@@ -76,7 +88,6 @@ impl PluginManager {
 
                     lua.globals()
                         .set("_temp_plugin_dir", current_plugin_dir.clone())?;
-                    lua.globals().set("_temp_from_loader", from_loader)?;
 
                     let info = lua.load(&buffer).eval::<PluginInfo>();
                     match info {
@@ -115,11 +126,18 @@ impl PluginManager {
                                     let result = func.call::<_, bool>(());
                                     match result {
                                         Ok(true) => {
-                                            set_plugin_status(&info.name, PluginStatus {
-                                                version: info.version.clone(),
-                                                startup_timestamp: chrono::Local::now().timestamp(),
-                                                plugin_path: plugin_dir.to_str().unwrap().to_string(),
-                                            });
+                                            set_plugin_status(
+                                                &info.name,
+                                                PluginStatus {
+                                                    version: info.version.clone(),
+                                                    startup_timestamp: chrono::Local::now()
+                                                        .timestamp(),
+                                                    plugin_path: plugin_dir
+                                                        .to_str()
+                                                        .unwrap()
+                                                        .to_string(),
+                                                },
+                                            );
 
                                             // insert plugin-info into plugin-manager
                                             if let Ok(index) =
@@ -183,6 +201,8 @@ impl PluginManager {
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.build.on_start {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -207,6 +227,8 @@ impl PluginManager {
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.build.on_finish {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -228,6 +250,8 @@ impl PluginManager {
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_start {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -251,6 +275,8 @@ impl PluginManager {
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_rebuild {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -272,6 +298,8 @@ impl PluginManager {
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_shutdown {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -284,9 +312,12 @@ impl PluginManager {
         let plugin_path = crate_root().unwrap().join(".dioxus").join("plugins");
         if !plugin_path.is_dir() {
             create_dir(&plugin_path).expect("Create plugin directory failed.");
-            let mut plugin_lock_file = std::fs::File::create(plugin_path.join("Plugin.lock")).expect("Plugin file init failed.");
+            let mut plugin_lock_file = std::fs::File::create(plugin_path.join("Plugin.lock"))
+                .expect("Plugin file init failed.");
             let content = "{}".as_bytes();
-            plugin_lock_file.write_all(content).expect("Plugin file init failed.");
+            plugin_lock_file
+                .write_all(content)
+                .expect("Plugin file init failed.");
         }
         let core_path = plugin_path.join("core");
         if !core_path.is_dir() {
@@ -338,4 +369,38 @@ impl PluginManager {
         Ok(())
     }
 
+    pub fn create_dev_plugin(vscode: bool) -> anyhow::Result<()> {
+        let plugin_dir = Self::init_plugin_dir();
+        
+        let repo_name = "hello-dioxus-plugin";
+        let target_path = plugin_dir.join(repo_name);
+
+        if target_path.is_dir() {
+            return Err(anyhow::anyhow!("Plugin directory exist."));
+        }
+
+        clone_repo(
+            &target_path,
+            "https://github.com/mrxiaozhuox/hello-dioxus-plugin",
+            "main",
+        )?;
+
+        if vscode {
+            let config = json!(
+                {
+                    "Lua.workspace.library": [
+                        "../core/"
+                    ],
+                    "Lua.diagnostics.globals": [
+                        "library_dir"
+                    ]
+                }
+            );
+            create_dir(target_path.join(".vscode"))?;
+            let mut file = std::fs::File::create("settings.json")?;
+            file.write_all(serde_json::to_string(&config)?.as_bytes())?;
+        }
+
+        Ok(())
+    }
 }

@@ -4,17 +4,23 @@ use super::*;
 #[derive(Clone, Debug, Deserialize, Subcommand)]
 #[clap(name = "plugin")]
 pub enum Plugin {
-    /// Return all dioxus-cli support tools.
+    /// Print all installed cli plugins.
     List {},
-    /// Get default app install path.
+    /// Get plugin storage path.
     AppPath {},
-    /// Install a new tool.
+    /// Install a new plugin.
     Add {
         #[clap(long, default_value_t)]
         git: String,
         #[clap(long, default_value = "main")]
         branch: String,
     },
+    /// Create a new plugin by plugin-develop template.
+    Create {
+        /// Open this flag will init some sumneko-lua vscode settings.
+        #[clap(long, default_missing_value = "true")]
+        vscode: bool,
+    }
 }
 
 impl Plugin {
@@ -43,6 +49,13 @@ impl Plugin {
                     println!("Please use `dioxus plugin add --git {{GIT_URL}}` to install plugin.\n");
                     log::warn!("We are working for plugin index system, but for now, you need use git url to install plugin.\n");
                     println!("Maybe this link can help you to find some useful plugins: https://github.com/search?q=dioxus-plugin&type=repositories")
+                }
+            },
+            Plugin::Create { vscode } => {
+                if let Err(e) = crate::plugin::PluginManager::create_dev_plugin(vscode) {
+                    log::error!("Plugin create failed: {e}")
+                } else {
+                    println!("🔰 Develop plugin create done.");
                 }
             }
         }
