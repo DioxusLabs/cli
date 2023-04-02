@@ -237,7 +237,7 @@ impl PluginManager {
         Ok(())
     }
 
-    pub fn on_serve_start(crate_config: &CrateConfig) -> anyhow::Result<()> {
+    pub fn on_serve_start(timestamp: i64,crate_config: &CrateConfig) -> anyhow::Result<()> {
         let lua = LUA.lock().expect("Lua runtime load failed.");
 
         if !lua.globals().contains_key("manager")? {
@@ -246,7 +246,9 @@ impl PluginManager {
         let manager = lua.globals().get::<_, Table>("manager")?;
 
         let args = lua.create_table()?;
+
         args.set("name", crate_config.dioxus_config.application.name.clone())?;
+        args.set("timestamp", timestamp)?;
 
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;

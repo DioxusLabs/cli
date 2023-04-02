@@ -134,7 +134,7 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> R
 
     log::info!("🚀 Starting development server...");
 
-    PluginManager::on_serve_start(&config)?;
+    PluginManager::on_serve_start(chrono::Local::now().timestamp(),&config)?;
 
     let dist_path = config.out_dir.clone();
     let (reload_tx, _) = broadcast::channel(100);
@@ -407,7 +407,7 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
         },
     );
 
-    PluginManager::on_serve_start(&config)?;
+    PluginManager::on_serve_start(chrono::Local::now().timestamp(),&config)?;
 
     let file_service_config = config.clone();
     let file_service = ServiceBuilder::new()
