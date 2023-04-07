@@ -30,15 +30,28 @@ lazy_static::lazy_static! {
 pub struct PluginManager;
 
 impl PluginManager {
+    pub fn get_plugin_dir() -> Option<PathBuf> {
+        let crate_root = crate_root().unwrap();
+        let plugins_dir = crate_root.join(".dioxus").join("plugins");
+        if plugins_dir.join("core").is_dir() {
+            return Some(plugins_dir);
+        }
+        None
+    }
+
     pub fn init(config: toml::Value) -> anyhow::Result<()> {
+        let plugin_dir = if let Some(v) = Self::get_plugin_dir() {
+            v
+        } else {
+            return Ok(());
+        };
+
         let config = PluginConfig::from_toml_value(config);
 
         let lua = LUA.lock().expect("Lua runtime load failed");
 
         let manager = lua.create_table().expect("Lua runtime init failed");
         let name_index = lua.create_table().expect("Lua runtime init failed");
-
-        let plugin_dir = Self::init_plugin_dir();
 
         let api = lua.create_table().unwrap();
 
@@ -202,7 +215,7 @@ impl PluginManager {
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
-            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.build.on_start {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -228,7 +241,7 @@ impl PluginManager {
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
-            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.build.on_finish {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -237,7 +250,7 @@ impl PluginManager {
         Ok(())
     }
 
-    pub fn on_serve_start(timestamp: i64,crate_config: &CrateConfig) -> anyhow::Result<()> {
+    pub fn on_serve_start(timestamp: i64, crate_config: &CrateConfig) -> anyhow::Result<()> {
         let lua = LUA.lock().expect("Lua runtime load failed.");
 
         if !lua.globals().contains_key("manager")? {
@@ -253,7 +266,7 @@ impl PluginManager {
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
-            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_start {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -278,7 +291,7 @@ impl PluginManager {
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
-            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_rebuild {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -301,7 +314,7 @@ impl PluginManager {
         for i in 1..(manager.len()? as i32 + 1) {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
-            .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
             if let Some(func) = info.serve.on_shutdown {
                 func.call::<Table, ()>(args.clone())?;
             }
@@ -310,7 +323,7 @@ impl PluginManager {
         Ok(())
     }
 
-    pub fn init_plugin_dir() -> PathBuf {
+    pub fn install_plugin_dir() {
         let plugin_path = crate_root().unwrap().join(".dioxus").join("plugins");
         if !plugin_path.is_dir() {
             create_dir(&plugin_path).expect("Create plugin directory failed.");
@@ -328,7 +341,6 @@ impl PluginManager {
             clone_repo(&core_path, url, "v2").expect("Init Plugin Library faield.");
             log::info!("🔰 Plugin library dowonload done.");
         }
-        plugin_path
     }
 
     pub fn plugin_list() -> Vec<String> {
@@ -357,7 +369,12 @@ impl PluginManager {
     }
 
     pub fn remote_install_plugin(url: String, branch: String) -> anyhow::Result<()> {
-        let plugin_dir = Self::init_plugin_dir();
+        let plugin_dir = Self::get_plugin_dir();
+        if plugin_dir.is_none() {
+            return Err(anyhow::anyhow!("Plugin system not available"));
+        }
+        let plugin_dir = plugin_dir.unwrap();
+
         let binding = url.split("/").collect::<Vec<&str>>();
         let repo_name = binding.last().unwrap();
 
@@ -372,8 +389,12 @@ impl PluginManager {
     }
 
     pub fn create_dev_plugin(vscode: bool) -> anyhow::Result<()> {
-        let plugin_dir = Self::init_plugin_dir();
-        
+        let plugin_dir = Self::get_plugin_dir();
+        if plugin_dir.is_none() {
+            return Err(anyhow::anyhow!("Plugin system not available"));
+        }
+        let plugin_dir = plugin_dir.unwrap();
+
         let repo_name = "hello-dioxus-plugin";
         let target_path = plugin_dir.join(repo_name);
 

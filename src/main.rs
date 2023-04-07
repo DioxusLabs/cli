@@ -56,15 +56,6 @@ async fn main() -> anyhow::Result<()> {
             .map_err(|e| anyhow!("🚫 Configuring new project failed: {}", e)),
 
         Plugin(opts) => {
-            let dioxus_config = DioxusConfig::load()
-            .map_err(|e| anyhow!("Failed to load `Dioxus.toml` because: {e}"))?
-            .unwrap_or_else(|| {
-                log::warn!("You appear to be creating a Dioxus project from scratch; we will use the default config");
-                DioxusConfig::default()
-            });
-            PluginManager::init(dioxus_config.plugin)
-                .map_err(|e| anyhow!("🚫 Plugin system initialization failed: {e}"))?;
-
             opts
             .plugin()
             .await
