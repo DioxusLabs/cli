@@ -43,6 +43,7 @@ impl PluginManager {
     }
 
     pub fn init(config: toml::Value) -> anyhow::Result<()> {
+        // if plugin is unavailable (get_plugin_dir return None), then stop init pluginManager
         let plugin_dir = if let Some(v) = Self::get_plugin_dir() {
             v
         } else {
@@ -52,6 +53,22 @@ impl PluginManager {
         let config = PluginConfig::from_toml_value(config);
 
         let lua = LUA.lock().expect("Lua runtime load failed");
+
+        // if CLI support core library version != current library version, give warnning
+        let version_file = plugin_dir.join("core").join("version.lua");
+        if !version_file.is_file() {
+            return Ok(());
+        }
+        let version = lua
+            .load(&std::fs::read_to_string(version_file).unwrap())
+            .eval::<String>()
+            .expect("Load version failed.");
+        if version != CORE_LIBRARY_VERSION {
+            log::warn!("Core library is not same with CLI version, maybe have compatible problem!");
+            log::warn!("You can use `dioxus plugin upgrade core` command upgrade it.");
+            // make this warnning remain 3 seconds
+            std::thread::sleep(std::time::Duration::from_secs(3));
+        }
 
         let manager = lua.create_table().expect("Lua runtime init failed");
         let name_index = lua.create_table().expect("Lua runtime init failed");
