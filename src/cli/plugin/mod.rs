@@ -10,6 +10,8 @@ pub enum Plugin {
     List {},
     /// Get plugin storage path.
     AppPath {},
+    /// Upgrade plugin or library.
+    Upgrade { name: String },
     /// Install a new plugin.
     Add {
         #[clap(long, default_value_t)]
@@ -45,6 +47,21 @@ impl Plugin {
                     for item in crate::plugin::PluginManager::plugin_list() {
                         println!("- {item}");
                     }
+                }
+            }
+            Plugin::Upgrade { name } => {
+                if name.to_lowercase() == "core" {
+                    let upgrade = crate::plugin::PluginManager::upgrade_core_library(
+                        crate::plugin::CORE_LIBRARY_VERSION,
+                    );
+                    if let Err(e) = upgrade {
+                        log::error!("Plugin core library upgrade failed: {e}.");
+                    } else {
+                        println!("Plugin core library upgraded.");
+                    }
+                } else {
+                    log::warn!("Plugin upgrade coming soon...");
+                    log::warn!("Currently just support upgrade `core` library");
                 }
             }
             Plugin::AppPath {} => {

@@ -54,6 +54,13 @@ impl UserData for PluginFileSystem {
 
             Ok(true)
         });
+        methods.add_function("remove_file", |_, path: String| {
+            let file = PathBuf::from(path);
+            if file.is_file() {
+                return Ok(std::fs::remove_file(file).is_ok());
+            }
+            Ok(true)
+        });
         methods.add_function("move_file", |_, args: (String, String)| {
             let file = PathBuf::from(args.0);
             let target = PathBuf::from(args.1);
@@ -65,7 +72,7 @@ impl UserData for PluginFileSystem {
             if res.is_err() {
                 return Ok(false);
             }
-            return Ok(true)
+            return Ok(true);
         });
         methods.add_function("unzip_file", |_, args: (String, String)| {
             let file = PathBuf::from(args.0);

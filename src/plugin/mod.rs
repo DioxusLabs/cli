@@ -2,6 +2,7 @@ use std::{
     fs::create_dir,
     io::{Read, Write},
     path::PathBuf,
+    process::Command,
     sync::Mutex,
 };
 
@@ -9,6 +10,8 @@ use mlua::{Lua, Table};
 use serde_json::json;
 
 use crate::{crate_root, tools::clone_repo, CrateConfig};
+
+pub const CORE_LIBRARY_VERSION: &'static str = "0.2.1";
 
 use self::{
     interface::{
@@ -338,9 +341,42 @@ impl PluginManager {
         if !core_path.is_dir() {
             log::info!("📖 Start to init plugin library ...");
             let url = "https://github.com/DioxusLabs/cli-plugin-library";
-            clone_repo(&core_path, url, "v2").expect("Init Plugin Library faield.");
+            clone_repo(&core_path, url, CORE_LIBRARY_VERSION).expect("Init Plugin Library faield.");
             log::info!("🔰 Plugin library dowonload done.");
         }
+    }
+
+    pub fn upgrade_core_library(version: &str) -> anyhow::Result<()> {
+        let plugin_path: PathBuf = crate_root().unwrap().join(".dioxus").join("plugins");
+        if !plugin_path.is_dir() {
+            return Err(anyhow::anyhow!("Plugin directory not found"));
+        }
+
+        let url = format!(
+            "https://api.github.com/repos/DioxusLabs/cli-plugin-library/branches/{version}"
+        );
+
+        let client = reqwest::blocking::Client::new();
+        let result = client
+            .get(url)
+            .header(reqwest::header::USER_AGENT, "mrxiaozhuox")
+            .send()?
+            .status();
+        if !result.is_success() {
+            return Err(anyhow::anyhow!("Plugin library version not found"));
+        }
+
+        // Fetch & sync from remote repo
+        let mut cmd = Command::new("git");
+        let cmd = cmd.current_dir(plugin_path.join("core"));
+        let _res = cmd.arg("fetch").output()?;
+
+        // Switch to new version branch
+        let mut cmd = Command::new("git");
+        let cmd = cmd.current_dir(plugin_path.join("core"));
+        let _res = cmd.arg("switch").arg(version).output()?;
+
+        Ok(())
     }
 
     pub fn plugin_list() -> Vec<String> {
