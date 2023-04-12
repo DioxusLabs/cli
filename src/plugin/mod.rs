@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-use mlua::{Lua, Table};
+use mlua::{chunk, Lua, Table};
 use serde_json::json;
 
 use crate::{crate_root, tools::clone_repo, CrateConfig};
@@ -93,10 +93,12 @@ impl PluginManager {
         lua.globals()
             .set("plugin_lib", api)
             .expect("Plugin: library startup failed");
-        lua.globals()
-            .set("library_dir", plugin_dir.join("core").to_str().unwrap())
-            .unwrap();
         lua.globals().set("config_info", config.clone())?;
+
+        // auto-load library_dir
+        let library_dir = plugin_dir.join("core").to_str().unwrap();
+        lua.load(chunk!(package.path = $library_dir.."/?.lua"))
+            .exec()?;
 
         let mut index: u32 = 1;
         let dirs = std::fs::read_dir(&plugin_dir)?;
