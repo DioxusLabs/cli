@@ -19,7 +19,6 @@ use self::{
         network::PluginNetwork, os::PluginOS, path::PluginPath, PluginInfo,
     },
     status::{get_plugin_status, set_plugin_status, PluginStatus},
-    types::PluginConfig,
 };
 
 pub mod interface;

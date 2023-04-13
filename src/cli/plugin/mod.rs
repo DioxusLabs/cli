@@ -41,7 +41,7 @@ impl Plugin {
                     log::warn!("Plugin system not available.");
                     log::warn!("Please execute `dioxus plugin init` command first.");
                 } else {
-                    crate::plugin::PluginManager::init(dioxus_config.plugin)
+                    crate::plugin::PluginManager::init(dioxus_config)
                         .expect("🚫 Plugin system initialization failed.");
 
                     for item in crate::plugin::PluginManager::plugin_list() {

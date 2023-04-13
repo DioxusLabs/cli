@@ -16,25 +16,103 @@ fn default_plugin() -> toml::Value {
     toml::Value::Boolean(true)
 }
 
+// this trait implement for DioxusConfig transfer to Lua plugin
 impl<'lua> mlua::ToLua<'lua> for DioxusConfig {
     fn to_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
         let data = lua.create_table()?;
 
         let application_table = lua.create_table()?;
-        let web_table = lua.create_table()?;
 
         let plugin_config = PluginConfig::from_toml_value(self.plugin);
-        data.set("plugin", plugin_config);
+        data.set("plugin", plugin_config)?;
 
-        application_table.set("name", self.application.name);
-        application_table.set("default_patform", self.application.default_platform);
+        application_table.set("name", self.application.name)?;
+        application_table.set("default_patform", self.application.default_platform)?;
         if let Some(out_dir) = self.application.out_dir {
-            application_table.set("out_dir", out_dir.to_str().unwrap().to_string());
+            application_table.set("out_dir", out_dir.to_str().unwrap().to_string())?;
         }
         if let Some(asset_dir) = self.application.asset_dir {
-            application_table.set("asset_dir", asset_dir.to_str().unwrap().to_string());
+            application_table.set("asset_dir", asset_dir.to_str().unwrap().to_string())?;
         }
-        application_table.set("sub_package", self.application.sub_package);
+        application_table.set("sub_package", self.application.sub_package)?;
+
+        let web_table = {
+            let tab = lua.create_table()?;
+
+            let app = lua.create_table()?;
+            app.set("title", self.web.app.title)?;
+            app.set("base_path", self.web.app.base_path)?;
+            tab.set("app", app)?;
+
+            let watcher = lua.create_table()?;
+            watcher.set("reload_html", self.web.watcher.reload_html)?;
+            watcher.set("index_on_404", self.web.watcher.index_on_404)?;
+            watcher.set(
+                "watch_path",
+                self.web.watcher.watch_path.map(|l| {
+                    l.iter()
+                        .map(|p| p.to_str().unwrap().to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )?;
+            tab.set("watcher", watcher)?;
+
+            let resource = lua.create_table()?;
+            resource.set(
+                "style",
+                self.web.resource.style.map(|i| {
+                    i.iter()
+                        .map(|p| p.to_str().unwrap().to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )?;
+            resource.set(
+                "script",
+                self.web.resource.script.map(|i| {
+                    i.iter()
+                        .map(|p| p.to_str().unwrap().to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )?;
+
+            let dev_resource = lua.create_table()?;
+            dev_resource.set(
+                "style",
+                self.web.resource.dev.style.map(|i| {
+                    i.iter()
+                        .map(|p| p.to_str().unwrap().to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )?;
+            dev_resource.set(
+                "script",
+                self.web.resource.dev.script.map(|i| {
+                    i.iter()
+                        .map(|p| p.to_str().unwrap().to_string())
+                        .collect::<Vec<String>>()
+                }),
+            )?;
+            tab.set("dev", dev_resource)?;
+
+            let proxy = self.web.proxy.map(|v| {
+                let it = v.iter().map(|v| {
+                    let temp = lua.create_table().unwrap();
+                    temp.set("backend", v.clone().backend).unwrap();
+                    temp
+                });
+                let mut result = Vec::new();
+                for i in it {
+                    result.push(i);
+                }
+                result
+            });
+            tab.set("proxy", proxy)?;
+
+            tab.set("resource", resource)?;
+
+            tab
+        };
+        data.set("web", web_table)?;
 
         Ok(mlua::Value::Table(data))
     }
