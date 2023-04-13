@@ -3,21 +3,15 @@ use std::collections::HashMap;
 use mlua::ToLua;
 
 #[derive(Debug, Clone)]
-pub struct PluginConfig {
-    pub config_info: HashMap<String, HashMap<String, Value>>,
-}
+pub struct PluginConfig(HashMap<String, HashMap<String, Value>>);
 
 impl<'lua> ToLua<'lua> for PluginConfig {
     fn to_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
         let table = lua.create_table()?;
 
-        let config_info = lua.create_table()?;
-
-        for (name, data) in self.config_info {
-            config_info.set(name, data)?;
+        for (name, data) in self.0 {
+            table.set(name, data)?;
         }
-
-        table.set("config_info", config_info)?;
 
         Ok(mlua::Value::Table(table))
     }
@@ -38,13 +32,9 @@ impl PluginConfig {
                 }
             }
 
-            Self {
-                config_info,
-            }
+            Self(config_info)
         } else {
-            Self {
-                config_info: HashMap::new(),
-            }
+            Self(HashMap::new())
         }
     }
 }

@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
                 log::warn!("You appear to be creating a Dioxus project from scratch; we will use the default config");
                 DioxusConfig::default()
             });
-            PluginManager::init(dioxus_config.plugin)
+            PluginManager::init(dioxus_config)
                 .map_err(|e| anyhow!("🚫 Plugin system initialization failed: {e}"))?;
 
             opts.build()
@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
                 log::warn!("You appear to be creating a Dioxus project from scratch; we will use the default config");
                 DioxusConfig::default()
             });
-            PluginManager::init(dioxus_config.plugin)
+            PluginManager::init(dioxus_config)
                 .map_err(|e| anyhow!("🚫 Plugin system initialization failed: {e}"))?;
 
             opts.serve()
@@ -55,12 +55,10 @@ async fn main() -> anyhow::Result<()> {
             .config()
             .map_err(|e| anyhow!("🚫 Configuring new project failed: {}", e)),
 
-        Plugin(opts) => {
-            opts
+        Plugin(opts) => opts
             .plugin()
             .await
-            .map_err(|e| anyhow!("🚫 Error with plugin: {}", e))
-        },
+            .map_err(|e| anyhow!("🚫 Error with plugin: {}", e)),
 
         Autoformat(opts) => opts
             .autoformat()

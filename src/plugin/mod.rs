@@ -9,7 +9,7 @@ use std::{
 use mlua::{chunk, Lua, Table};
 use serde_json::json;
 
-use crate::{crate_root, tools::clone_repo, CrateConfig};
+use crate::{crate_root, tools::clone_repo, CrateConfig, DioxusConfig};
 
 pub const CORE_LIBRARY_VERSION: &'static str = "0.2.1";
 
@@ -24,7 +24,7 @@ use self::{
 
 pub mod interface;
 pub mod status;
-mod types;
+pub mod types;
 
 lazy_static::lazy_static! {
     static ref LUA: Mutex<Lua> = Mutex::new(Lua::new());
@@ -42,15 +42,13 @@ impl PluginManager {
         None
     }
 
-    pub fn init(config: toml::Value) -> anyhow::Result<()> {
+    pub fn init(config: DioxusConfig) -> anyhow::Result<()> {
         // if plugin is unavailable (get_plugin_dir return None), then stop init pluginManager
         let plugin_dir = if let Some(v) = Self::get_plugin_dir() {
             v
         } else {
             return Ok(());
         };
-
-        let config = PluginConfig::from_toml_value(config);
 
         let lua = LUA.lock().expect("Lua runtime load failed");
 
@@ -93,10 +91,10 @@ impl PluginManager {
         lua.globals()
             .set("plugin_lib", api)
             .expect("Plugin: library startup failed");
-        lua.globals().set("config_info", config.clone())?;
+        lua.globals().set("plugin_config", config.clone())?;
 
         // auto-load library_dir
-        let library_dir = plugin_dir.join("core").to_str().unwrap();
+        let library_dir = plugin_dir.join("core").to_str().unwrap().to_string();
         lua.load(chunk!(package.path = $library_dir.."/?.lua"))
             .exec()?;
 

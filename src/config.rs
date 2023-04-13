@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::{error::Result, plugin::types::PluginConfig};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -14,6 +14,30 @@ pub struct DioxusConfig {
 
 fn default_plugin() -> toml::Value {
     toml::Value::Boolean(true)
+}
+
+impl<'lua> mlua::ToLua<'lua> for DioxusConfig {
+    fn to_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
+        let data = lua.create_table()?;
+
+        let application_table = lua.create_table()?;
+        let web_table = lua.create_table()?;
+
+        let plugin_config = PluginConfig::from_toml_value(self.plugin);
+        data.set("plugin", plugin_config);
+
+        application_table.set("name", self.application.name);
+        application_table.set("default_patform", self.application.default_platform);
+        if let Some(out_dir) = self.application.out_dir {
+            application_table.set("out_dir", out_dir.to_str().unwrap().to_string());
+        }
+        if let Some(asset_dir) = self.application.asset_dir {
+            application_table.set("asset_dir", asset_dir.to_str().unwrap().to_string());
+        }
+        application_table.set("sub_package", self.application.sub_package);
+
+        Ok(mlua::Value::Table(data))
+    }
 }
 
 impl DioxusConfig {
