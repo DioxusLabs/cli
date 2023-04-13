@@ -93,7 +93,12 @@ impl PluginManager {
         lua.globals().set("plugin_config", config.clone())?;
 
         // auto-load library_dir
+<<<<<<< HEAD
         let library_dir = plugin_dir.join("core").to_str().unwrap().to_string();
+=======
+        let core_path = plugin_dir.join("core");
+        let library_dir = core_path.to_str().unwrap();
+>>>>>>> master
         lua.load(chunk!(package.path = $library_dir.."/?.lua"))
             .exec()?;
 
