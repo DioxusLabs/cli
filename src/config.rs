@@ -21,20 +21,24 @@ impl<'lua> mlua::ToLua<'lua> for DioxusConfig {
     fn to_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value<'lua>> {
         let data = lua.create_table()?;
 
-        let application_table = lua.create_table()?;
-
         let plugin_config = PluginConfig::from_toml_value(self.plugin);
         data.set("plugin", plugin_config)?;
 
-        application_table.set("name", self.application.name)?;
-        application_table.set("default_patform", self.application.default_platform)?;
-        if let Some(out_dir) = self.application.out_dir {
-            application_table.set("out_dir", out_dir.to_str().unwrap().to_string())?;
-        }
-        if let Some(asset_dir) = self.application.asset_dir {
-            application_table.set("asset_dir", asset_dir.to_str().unwrap().to_string())?;
-        }
-        application_table.set("sub_package", self.application.sub_package)?;
+        let application_table = {
+            let tab = lua.create_table()?;
+
+            tab.set("name", self.application.name)?;
+            tab.set("default_patform", self.application.default_platform)?;
+            if let Some(out_dir) = self.application.out_dir {
+                tab.set("out_dir", out_dir.to_str().unwrap().to_string())?;
+            }
+            if let Some(asset_dir) = self.application.asset_dir {
+                tab.set("asset_dir", asset_dir.to_str().unwrap().to_string())?;
+            }
+            tab.set("sub_package", self.application.sub_package)?;
+            tab
+        };
+        data.set("application", application_table)?;
 
         let web_table = {
             let tab = lua.create_table()?;
