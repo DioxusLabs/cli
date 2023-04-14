@@ -312,7 +312,7 @@ impl PluginManager {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
                 .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
-            if let Some(func) = info.serve.before_rebuild {
+            if let Some(func) = info.serve.on_rebuild_start {
                 func.call::<Table, ()>(args.clone())?;
             }
         }
@@ -337,7 +337,7 @@ impl PluginManager {
             let info = manager.get::<i32, PluginInfo>(i)?;
             lua.globals()
                 .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
-            if let Some(func) = info.serve.on_rebuild {
+            if let Some(func) = info.serve.on_rebuild_end {
                 func.call::<Table, ()>(args.clone())?;
             }
         }

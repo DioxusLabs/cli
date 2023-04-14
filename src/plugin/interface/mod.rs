@@ -167,8 +167,8 @@ impl<'lua> ToLua<'lua> for PluginBuildInfo<'lua> {
 #[derive(Debug, Clone, Default)]
 pub struct PluginServeInfo<'lua> {
     pub on_start: Option<Function<'lua>>,
-    pub before_rebuild: Option<Function<'lua>>,
-    pub on_rebuild: Option<Function<'lua>>,
+    pub on_rebuild_start: Option<Function<'lua>>,
+    pub on_rebuild_end: Option<Function<'lua>>,
     pub on_shutdown: Option<Function<'lua>>,
 }
 
@@ -180,11 +180,11 @@ impl<'lua> FromLua<'lua> for PluginServeInfo<'lua> {
             if let Ok(v) = tab.get::<_, Function>("on_start") {
                 res.on_start = Some(v);
             }
-            if let Ok(v) = tab.get::<_, Function>("before_rebuild") {
-                res.before_rebuild = Some(v);
+            if let Ok(v) = tab.get::<_, Function>("on_rebuild_start") {
+                res.on_rebuild_start = Some(v);
             }
-            if let Ok(v) = tab.get::<_, Function>("on_rebuild") {
-                res.on_rebuild = Some(v);
+            if let Ok(v) = tab.get::<_, Function>("on_rebuild_end") {
+                res.on_rebuild_end = Some(v);
             }
             if let Ok(v) = tab.get::<_, Function>("on_shutdown") {
                 res.on_shutdown = Some(v);
@@ -202,11 +202,11 @@ impl<'lua> ToLua<'lua> for PluginServeInfo<'lua> {
         if let Some(v) = self.on_start {
             res.set("on_start", v)?;
         }
-        if let Some(v) = self.before_rebuild {
-            res.set("before_rebuild", v)?;
+        if let Some(v) = self.on_rebuild_start {
+            res.set("on_rebuild_start", v)?;
         }
-        if let Some(v) = self.on_rebuild {
-            res.set("on_rebuild", v)?;
+        if let Some(v) = self.on_rebuild_end {
+            res.set("on_rebuild_end", v)?;
         }
 
         if let Some(v) = self.on_shutdown {
