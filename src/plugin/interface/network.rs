@@ -46,11 +46,6 @@ impl UserData for PluginNetwork {
                     );
                     return Ok(false);
                 }
-                info!(
-                    "Downloaded file from URL '{}' to path '{}'",
-                    url,
-                    path.display()
-                );
                 Ok(true)
             })
         });
