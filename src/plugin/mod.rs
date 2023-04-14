@@ -295,6 +295,31 @@ impl PluginManager {
         Ok(())
     }
 
+    pub fn before_serve_rebuild(timestamp: i64, files: Vec<PathBuf>) -> anyhow::Result<()> {
+        let lua = LUA.lock().expect("Lua runtime load failed.");
+
+        let manager = lua.globals().get::<_, Table>("manager")?;
+
+        let args = lua.create_table()?;
+        args.set("timestamp", timestamp)?;
+        let files: Vec<String> = files
+            .iter()
+            .map(|v| v.to_str().unwrap().to_string())
+            .collect();
+        args.set("changed_files", files)?;
+
+        for i in 1..(manager.len()? as i32 + 1) {
+            let info = manager.get::<i32, PluginInfo>(i)?;
+            lua.globals()
+                .set("_temp_plugin_dir", info.inner.plugin_dir.clone())?;
+            if let Some(func) = info.serve.before_rebuild {
+                func.call::<Table, ()>(args.clone())?;
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn on_serve_rebuild(timestamp: i64, files: Vec<PathBuf>) -> anyhow::Result<()> {
         let lua = LUA.lock().expect("Lua runtime load failed.");
 

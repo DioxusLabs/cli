@@ -15,6 +15,7 @@ The plugin library have pre-define some important event you can control:
 - `build.on_start`
 - `build.on_finished`
 - `serve.on_start`
+- `serve.before_rebuild`
 - `serve.on_rebuild`
 - `serve.on_shutdown`
 
@@ -60,6 +61,12 @@ end
 manager.serve.on_start = function (info)
     -- this function will after clean & print to run, so you can print some thing.
     log.info("[plugin] Serve start: " .. info.name)
+end
+
+---@param info ServeRebuildInfo
+manager.serve.before_rebuild = function (info)
+    -- this function will execute before the CLI rebuilds
+    log.info("[plugin] Before rebuild: " .. info.name)
 end
 
 ---@param info ServeRebuildInfo
