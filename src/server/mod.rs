@@ -361,6 +361,11 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
         let config = watcher_config.clone();
         if let Ok(e) = info {
             if chrono::Local::now().timestamp() > last_update_time {
+                let _ = PluginManager::before_serve_rebuild(
+                    chrono::Local::now().timestamp(),
+                    e.paths.clone(),
+                );
+
                 match build_manager.rebuild() {
                     Ok(res) => {
                         last_update_time = chrono::Local::now().timestamp();

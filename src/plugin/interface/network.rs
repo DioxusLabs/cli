@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use mlua::{Error, UserData, UserDataMethods};
 
-use log::{error, info};
+use log::error;
 use reqwest::Url;
 use tokio::task;
 
