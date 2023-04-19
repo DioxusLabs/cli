@@ -15,8 +15,8 @@ pub const CORE_LIBRARY_VERSION: &'static str = "0.2.1";
 
 use self::{
     interface::{
-        command::PluginCommander, dirs::PluginDirs, fs::PluginFileSystem, log::PluginLogger,
-        network::PluginNetwork, os::PluginOS, path::PluginPath, PluginInfo,
+        command::PluginCommander, dirs::PluginDirs, fs::PluginFileSystem, json::PluginJson,
+        log::PluginLogger, network::PluginNetwork, os::PluginOS, path::PluginPath, PluginInfo,
     },
     status::{get_plugin_status, set_plugin_status, PluginStatus},
 };
@@ -86,6 +86,8 @@ impl PluginManager {
             .expect("Plugin: `path` library init faield");
         api.set("os", PluginOS)
             .expect("Plugin: `os` library init faield");
+        api.set("json", PluginJson)
+            .expect("Plugin `json` library init failed");
 
         lua.globals()
             .set("plugin_lib", api)
