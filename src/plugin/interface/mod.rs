@@ -3,6 +3,7 @@ use mlua::{FromLua, Function, ToLua};
 pub mod command;
 pub mod dirs;
 pub mod fs;
+pub mod json;
 pub mod log;
 pub mod network;
 pub mod os;
