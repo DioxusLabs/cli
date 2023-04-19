@@ -74,14 +74,14 @@ impl UserData for PluginFileSystem {
             }
             return Ok(true);
         });
-        methods.add_function("copy_file", |_, args: (String)| {
+        methods.add_function("copy_file", |_, args: (String, String)| {
             let file = PathBuf::from(args.0);
             let target = PathBuf::from(args.1);
             if !file.is_file() {
                 return Ok(false);
             }
-            let options = CopyOptions::new();
-            let res = fs_extra::file::copy(file, target, options);
+            let options = fs_extra::file::CopyOptions::new();
+            let res = fs_extra::file::copy(file, target, &options);
             return Ok(res.is_ok());
         });
         methods.add_function("read_dir", |_, path: String| {
