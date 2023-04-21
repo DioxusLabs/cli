@@ -8,6 +8,7 @@
   - [Build](./cmd/build.md)
   - [Serve](./cmd/serve.md)
   - [Clean](./cmd/clean.md)
+  - [Plugin](./cmd/plugin.md)
   - [Translate](./cmd/translate.md)
   - [Format](./cmd/fmt.md)
 - [Plugin Development](./plugin/README.md)

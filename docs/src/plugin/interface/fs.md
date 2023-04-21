@@ -114,4 +114,3 @@ local path = "~/MyProject/"
 local list = plugin.fs.read_dir(path)
 -- list = ["temp", "package.zip", "package.tar.gz"]
 ```
-
