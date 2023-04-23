@@ -31,5 +31,3 @@ Beacause of the core library must be sync with cli version, so you need use upgr
 ```shell
 dioxus plugin upgrade
 ```
-
-x
