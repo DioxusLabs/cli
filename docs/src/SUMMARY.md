@@ -9,6 +9,7 @@
   - [Serve](./cmd/serve.md)
   - [Clean](./cmd/clean.md)
   - [Translate](./cmd/translate.md)
+  - [Bundle](./cmd/bundle.md)
 - [Plugin Development](./plugin/README.md)
   - [API.Log](./plugin/interface/log.md)
   - [API.Command](./plugin/interface/command.md)

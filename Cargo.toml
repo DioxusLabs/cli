@@ -82,6 +82,8 @@ dioxus-html = { version = "0.3", features = ["hot-reload-context"] }
 dioxus-core = { version = "0.3", features = ["serialize"] }
 dioxus-autofmt = "0.3.0"
 rsx-rosetta = { version = "0.3" }
+tauri-bundler = "1.1.2"
+tauri-utils = "1.2.1"
 
 [[bin]]
 path = "src/main.rs"

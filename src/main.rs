@@ -28,6 +28,10 @@ async fn main() -> anyhow::Result<()> {
             .build()
             .map_err(|e| anyhow!("🚫 Building project failed: {}", e)),
 
+        Bundle(opts) => opts
+            .bundle()
+            .map_err(|e| anyhow!("🚫 Bundling project failed: {}", e)),
+
         Clean(opts) => opts
             .clean()
             .map_err(|e| anyhow!("🚫 Cleaning project failed: {}", e)),
