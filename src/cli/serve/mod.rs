@@ -30,6 +30,10 @@ impl Serve {
         if self.serve.profile.is_some() {
             crate_config.set_profile(self.serve.profile.unwrap());
         }
+        
+        if self.serve.features.is_some() {
+            crate_config.set_features(self.serve.features.unwrap());
+        }
 
         let platform = self.serve.platform.unwrap_or_else(|| {
             crate_config
@@ -64,7 +68,7 @@ impl Serve {
         Serve::regen_dev_page(&crate_config)?;
 
         // start the develop server
-        server::startup(self.serve.port, crate_config.clone()).await?;
+        server::startup(self.serve.port, crate_config.clone(), self.serve.open).await?;
 
         Ok(())
     }

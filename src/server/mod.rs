@@ -2,7 +2,10 @@ use crate::{builder, plugin::PluginManager, serve::Serve, BuildResult, CrateConf
 use axum::{
     body::{Full, HttpBody},
     extract::{ws::Message, Extension, TypedHeader, WebSocketUpgrade},
-    http::{Response, StatusCode},
+    http::{
+        header::{HeaderName, HeaderValue},
+        Method, Response, StatusCode,
+    },
     response::IntoResponse,
     routing::{get, get_service},
     Router,
@@ -22,7 +25,10 @@ use std::{
 use tokio::sync::broadcast;
 use tower::ServiceBuilder;
 use tower_http::services::fs::{ServeDir, ServeFileSystemResponseBody};
-
+use tower_http::{
+    cors::{Any, CorsLayer},
+    ServiceBuilderExt,
+};
 mod proxy;
 
 pub struct BuildManager {
@@ -55,7 +61,7 @@ struct WsReloadState {
     update: broadcast::Sender<()>,
 }
 
-pub async fn startup(port: u16, config: CrateConfig) -> Result<()> {
+pub async fn startup(port: u16, config: CrateConfig, start_browser: bool) -> Result<()> {
     // ctrl-c shutdown checker
     let crate_config = config.clone();
     let _ = ctrlc::set_handler(move || {
@@ -64,10 +70,11 @@ pub async fn startup(port: u16, config: CrateConfig) -> Result<()> {
     });
 
     let ip = get_ip().unwrap_or(String::from("0.0.0.0"));
+
     if config.hot_reload {
-        startup_hot_reload(ip, port, config).await?
+        startup_hot_reload(ip, port, config, start_browser).await?
     } else {
-        startup_default(ip, port, config).await?
+        startup_default(ip, port, config, start_browser).await?
     }
     Ok(())
 }
@@ -129,7 +136,7 @@ pub async fn hot_reload_handler(
 }
 
 #[allow(unused_assignments)]
-pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> Result<()> {
+pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig, start_browser: bool) -> Result<()> {
     let first_build_result = crate::builder::build(&config, false)?;
 
     log::info!("🚀 Starting development server...");
@@ -168,6 +175,13 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> R
         .watch_path
         .clone()
         .unwrap_or_else(|| vec![PathBuf::from("src")]);
+
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(Any);
 
     let watcher_config = config.clone();
     let watcher_ip = ip.clone();
@@ -266,6 +280,14 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> R
 
     let file_service_config = config.clone();
     let file_service = ServiceBuilder::new()
+        .override_response_header(
+            HeaderName::from_static("cross-origin-embedder-policy"),
+            HeaderValue::from_static("require-corp"),
+        )
+        .override_response_header(
+            HeaderName::from_static("cross-origin-opener-policy"),
+            HeaderValue::from_static("same-origin"),
+        )
         .and_then(
             move |response: Response<ServeFileSystemResponseBody>| async move {
                 let response = if file_service_config
@@ -316,17 +338,29 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig) -> R
 
     let router = router
         .route("/_dioxus/hot_reload", get(hot_reload_handler))
+        .layer(cors)
         .layer(Extension(ws_reload_state))
         .layer(Extension(hot_reload_state));
 
-    axum::Server::bind(&format!("0.0.0.0:{}", port).parse().unwrap())
-        .serve(router.into_make_service())
-        .await?;
+    let addr = format!("0.0.0.0:{}", port).parse().unwrap();
+
+    let server = axum::Server::bind(&addr).serve(router.into_make_service());
+
+    if start_browser {
+        let _ = open::that(format!("http://{}", addr));
+    }
+
+    server.await?;
 
     Ok(())
 }
 
-pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Result<()> {
+pub async fn startup_default(
+    ip: String,
+    port: u16,
+    config: CrateConfig,
+    start_browser: bool,
+) -> Result<()> {
     let first_build_result = crate::builder::build(&config, false)?;
 
     log::info!("🚀 Starting development server...");
@@ -345,6 +379,13 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
     });
 
     let mut last_update_time = chrono::Local::now().timestamp();
+
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(Any);
 
     // file watcher: check file change
     let allow_watch_path = config
@@ -416,6 +457,14 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
 
     let file_service_config = config.clone();
     let file_service = ServiceBuilder::new()
+        .override_response_header(
+            HeaderName::from_static("cross-origin-embedder-policy"),
+            HeaderValue::from_static("require-corp"),
+        )
+        .override_response_header(
+            HeaderName::from_static("cross-origin-opener-policy"),
+            HeaderValue::from_static("same-origin"),
+        )
         .and_then(
             move |response: Response<ServeFileSystemResponseBody>| async move {
                 let response = if file_service_config
@@ -452,7 +501,9 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
         .service(ServeDir::new(config.crate_dir.join(&dist_path)));
 
     let mut router = Router::new().route("/_dioxus/ws", get(ws_handler));
-
+    for proxy_config in config.dioxus_config.web.proxy.unwrap_or_default() {
+        router = proxy::add_proxy(router, &proxy_config)?;
+    }
     router = router
         .fallback(
             get_service(file_service).handle_error(|error: std::io::Error| async move {
@@ -462,11 +513,17 @@ pub async fn startup_default(ip: String, port: u16, config: CrateConfig) -> Resu
                 )
             }),
         )
+        .layer(cors)
         .layer(Extension(ws_reload_state));
 
-    axum::Server::bind(&format!("0.0.0.0:{}", port).parse().unwrap())
-        .serve(router.into_make_service())
-        .await?;
+    let addr = format!("0.0.0.0:{}", port).parse().unwrap();
+    let server = axum::Server::bind(&addr).serve(router.into_make_service());
+
+    if start_browser {
+        let _ = open::that(format!("http://{}", addr));
+    }
+
+    server.await?;
 
     Ok(())
 }
