@@ -136,7 +136,12 @@ pub async fn hot_reload_handler(
 }
 
 #[allow(unused_assignments)]
-pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig, start_browser: bool) -> Result<()> {
+pub async fn startup_hot_reload(
+    ip: String,
+    port: u16,
+    config: CrateConfig,
+    start_browser: bool,
+) -> Result<()> {
     let first_build_result = crate::builder::build(&config, false)?;
 
     log::info!("🚀 Starting development server...");
@@ -175,13 +180,6 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig, star
         .watch_path
         .clone()
         .unwrap_or_else(|| vec![PathBuf::from("src")]);
-
-    let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
-        .allow_origin(Any)
-        .allow_headers(Any);
 
     let watcher_config = config.clone();
     let watcher_ip = ip.clone();
@@ -278,16 +276,32 @@ pub async fn startup_hot_reload(ip: String, port: u16, config: CrateConfig, star
         },
     );
 
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(Any);
+
+    let (coep, coop) = if config.cross_origin_policy {
+        (
+            HeaderValue::from_static("require-corp"),
+            HeaderValue::from_static("same-origin"),
+        )
+    } else {
+        (
+            HeaderValue::from_static("unsafe-none"),
+            HeaderValue::from_static("unsafe-none"),
+        )
+    };
+
     let file_service_config = config.clone();
     let file_service = ServiceBuilder::new()
         .override_response_header(
             HeaderName::from_static("cross-origin-embedder-policy"),
-            HeaderValue::from_static("require-corp"),
+            coep,
         )
-        .override_response_header(
-            HeaderName::from_static("cross-origin-opener-policy"),
-            HeaderValue::from_static("same-origin"),
-        )
+        .override_response_header(HeaderName::from_static("cross-origin-opener-policy"), coop)
         .and_then(
             move |response: Response<ServeFileSystemResponseBody>| async move {
                 let response = if file_service_config
@@ -380,13 +394,6 @@ pub async fn startup_default(
 
     let mut last_update_time = chrono::Local::now().timestamp();
 
-    let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
-        .allow_origin(Any)
-        .allow_headers(Any);
-
     // file watcher: check file change
     let allow_watch_path = config
         .dioxus_config
@@ -455,16 +462,32 @@ pub async fn startup_default(
 
     PluginManager::on_serve_start(chrono::Local::now().timestamp(),&config)?;
 
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(Any);
+
+    let (coep, coop) = if config.cross_origin_policy {
+        (
+            HeaderValue::from_static("require-corp"),
+            HeaderValue::from_static("same-origin"),
+        )
+    } else {
+        (
+            HeaderValue::from_static("unsafe-none"),
+            HeaderValue::from_static("unsafe-none"),
+        )
+    };
+
     let file_service_config = config.clone();
     let file_service = ServiceBuilder::new()
         .override_response_header(
             HeaderName::from_static("cross-origin-embedder-policy"),
-            HeaderValue::from_static("require-corp"),
+            coep,
         )
-        .override_response_header(
-            HeaderName::from_static("cross-origin-opener-policy"),
-            HeaderValue::from_static("same-origin"),
-        )
+        .override_response_header(HeaderName::from_static("cross-origin-opener-policy"), coop)
         .and_then(
             move |response: Response<ServeFileSystemResponseBody>| async move {
                 let response = if file_service_config

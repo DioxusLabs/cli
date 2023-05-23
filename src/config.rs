@@ -258,6 +258,7 @@ pub struct CrateConfig {
     pub dioxus_config: DioxusConfig,
     pub release: bool,
     pub hot_reload: bool,
+    pub cross_origin_policy: bool,
     pub verbose: bool,
     pub custom_profile: Option<String>,
     pub features: Option<Vec<String>>,
@@ -325,6 +326,7 @@ impl CrateConfig {
             release,
             dioxus_config,
             hot_reload,
+            cross_origin_policy: false,
             custom_profile,
             features,
             verbose,
@@ -343,6 +345,11 @@ impl CrateConfig {
 
     pub fn with_hot_reload(&mut self, hot_reload: bool) -> &mut Self {
         self.hot_reload = hot_reload;
+        self
+    }
+
+    pub fn with_cross_origin_policy(&mut self, cross_origin_policy: bool) -> &mut Self {
+        self.cross_origin_policy = cross_origin_policy;
         self
     }
 

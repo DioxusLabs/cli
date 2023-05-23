@@ -72,10 +72,6 @@ impl Plugin {
                     } else {
                         log::error!("Plugin path get failed.");
                     }
-                } else {
-                    log::warn!("Plugin system not available.");
-                    log::warn!("Please execute `dioxus plugin init` command first.");
-                }
             }
             Plugin::Add { git, branch } => {
                 if !git.is_empty() {
