@@ -1,7 +1,4 @@
-use std::{
-    path::Path,
-    process::Command,
-};
+use std::{io::ErrorKind, path::Path, process::Command};
 
 pub fn clone_repo(dir: &Path, url: &str, branch: &str) -> anyhow::Result<()> {
     let target_dir = dir.parent().unwrap();
@@ -9,7 +6,13 @@ pub fn clone_repo(dir: &Path, url: &str, branch: &str) -> anyhow::Result<()> {
 
     let mut cmd = Command::new("git");
     let cmd = cmd.current_dir(target_dir);
-    let res = cmd.arg("clone").arg(url).arg(dir_name).output();
+    let res = cmd
+        .arg("clone")
+        .arg("--branch")
+        .arg(branch)
+        .arg(url)
+        .arg(dir_name)
+        .output();
     if let Err(err) = res {
         if ErrorKind::NotFound == err.kind() {
             log::warn!("Git program not found. Hint: Install git or check $PATH.");

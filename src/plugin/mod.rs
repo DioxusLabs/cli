@@ -385,7 +385,7 @@ impl PluginManager {
         if !core_path.is_dir() {
             log::info!("📖 Start to init plugin library ...");
             let url = "https://github.com/DioxusLabs/cli-plugin-library";
-            if let Err(err) = clone_repo(&plugin_path, url) {
+            if let Err(err) = clone_repo(&plugin_path, url, "main") {
                 log::error!("Failed to init plugin dir, error caused by {}. ", err);
             }
         }

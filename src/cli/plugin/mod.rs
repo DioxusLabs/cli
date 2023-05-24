@@ -72,6 +72,7 @@ impl Plugin {
                     } else {
                         log::error!("Plugin path get failed.");
                     }
+                }
             }
             Plugin::Add { git, branch } => {
                 if !git.is_empty() {
