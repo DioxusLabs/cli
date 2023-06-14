@@ -33,3 +33,14 @@ This function can check some path is a exist file.
 ### is_dir(path: string) -> boolean
 
 This function can check some path is a exist dir.
+
+### file_name(path: string) -> string
+
+This function will return the filename & directory name in a absolute path.
+
+```lua
+local path = "~/hello/dioxus/info.toml"
+local filename = plugin.path.file_name(path)
+-- filename = "info.toml"
+```
+

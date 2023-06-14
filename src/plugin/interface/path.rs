@@ -36,5 +36,9 @@ impl UserData for PluginPath {
             let path = PathBuf::from(path);
             Ok(path.is_file())
         });
+        methods.add_function("file_name", |_, path: String| {
+            let path = PathBuf::from(path);
+            Ok(path.file_name().unwrap().to_str().unwrap().to_string())
+        })
     }
 }

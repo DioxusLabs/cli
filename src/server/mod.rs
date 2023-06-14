@@ -146,7 +146,7 @@ pub async fn startup_hot_reload(
 
     log::info!("🚀 Starting development server...");
 
-    PluginManager::on_serve_start(&config)?;
+    PluginManager::on_serve_start(chrono::Local::now().timestamp(),&config)?;
 
     let dist_path = config.out_dir.clone();
     let (reload_tx, _) = broadcast::channel(100);
@@ -409,6 +409,11 @@ pub async fn startup_default(
         let config = watcher_config.clone();
         if let Ok(e) = info {
             if chrono::Local::now().timestamp() > last_update_time {
+                let _ = PluginManager::before_serve_rebuild(
+                    chrono::Local::now().timestamp(),
+                    e.paths.clone(),
+                );
+
                 match build_manager.rebuild() {
                     Ok(res) => {
                         last_update_time = chrono::Local::now().timestamp();
@@ -455,7 +460,7 @@ pub async fn startup_default(
         },
     );
 
-    PluginManager::on_serve_start(&config)?;
+    PluginManager::on_serve_start(chrono::Local::now().timestamp(),&config)?;
 
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource

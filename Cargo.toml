@@ -72,6 +72,7 @@ mlua = { version = "0.8.1", features = [
     "async",
     "send",
     "macros",
+    "serialize",
 ] }
 ctrlc = "3.2.3"
 # dioxus-rsx = "0.0.1"

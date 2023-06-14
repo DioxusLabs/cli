@@ -15,7 +15,8 @@ The plugin library have pre-define some important event you can control:
 - `build.on_start`
 - `build.on_finished`
 - `serve.on_start`
-- `serve.on_rebuild`
+- `serve.on_rebuild_start`
+- `serve.on_rebuild_end`
 - `serve.on_shutdown`
 
 ### Plugin Template
@@ -63,7 +64,13 @@ manager.serve.on_start = function (info)
 end
 
 ---@param info ServeRebuildInfo
-manager.serve.on_rebuild = function (info)
+manager.serve.on_rebuild_start = function (info)
+    -- this function will execute before the CLI rebuilds
+    log.info("[plugin] Before rebuild: " .. info.name)
+end
+
+---@param info ServeRebuildInfo
+manager.serve.on_rebuild_end = function (info)
     -- this function will after clean & print to run, so you can print some thing.
     local files = plugin.tool.dump(info.changed_files)
     log.info("[plugin] Serve rebuild: '" .. files .. "'")
@@ -72,8 +79,6 @@ end
 manager.serve.on_shutdown = function ()
     log.info("[plugin] Serve shutdown")
 end
-
-manager.serve.interval = 1000
 
 return manager
 ```

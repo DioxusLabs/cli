@@ -2,7 +2,7 @@
 
 📦✨ **Dioxus-Cli** is a tool to help get dioxus projects off the ground.
 
-![dioxus-logo](https://dioxuslabs.com/guide/images/dioxuslogo_full.png)
+![dioxus-logo](https://github.com/DioxusLabs/dioxus/raw/master/notes/header.svg)
 
 It includes `dev server`, `hot reload` and some `quick command` to help you use dioxus.
 

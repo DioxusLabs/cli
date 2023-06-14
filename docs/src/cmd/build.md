@@ -45,3 +45,12 @@ You can use `--example {name}` to build a example code.
 # build `example/test` code
 dioxus build --exmaple test
 ```
+
+## Enable Features 
+
+You can use `--features {features}` to enable different features.
+
+```sh
+dioxus build --feautres desktop
+```
+
