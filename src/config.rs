@@ -144,6 +144,7 @@ impl From<BundleConfig> for tauri_bundler::BundleSettings {
 pub struct DebianSettings {
     pub depends: Option<Vec<String>>,
     pub files: HashMap<PathBuf, PathBuf>,
+    pub nsis: Option<NsisSettings>,
 }
 
 impl From<DebianSettings> for tauri_bundler::DebianSettings {
@@ -151,6 +152,7 @@ impl From<DebianSettings> for tauri_bundler::DebianSettings {
         tauri_bundler::DebianSettings {
             depends: val.depends,
             files: val.files,
+            desktop_template: None,
         }
     }
 }
@@ -249,6 +251,7 @@ pub struct WindowsSettings {
     pub webview_install_mode: WebviewInstallMode,
     pub webview_fixed_runtime_path: Option<PathBuf>,
     pub allow_downgrades: bool,
+    pub nsis: Option<NsisSettings>,
 }
 
 impl From<WindowsSettings> for tauri_bundler::WindowsSettings {
@@ -263,6 +266,53 @@ impl From<WindowsSettings> for tauri_bundler::WindowsSettings {
             webview_install_mode: val.webview_install_mode.into(),
             webview_fixed_runtime_path: val.webview_fixed_runtime_path,
             allow_downgrades: val.allow_downgrades,
+            nsis: val.nsis.map(Into::into),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NsisSettings {
+    pub template: Option<PathBuf>,
+    pub license: Option<PathBuf>,
+    pub header_image: Option<PathBuf>,
+    pub sidebar_image: Option<PathBuf>,
+    pub installer_icon: Option<PathBuf>,
+    pub install_mode: NSISInstallerMode,
+    pub languages: Option<Vec<String>>,
+    pub custom_language_files: Option<HashMap<String, PathBuf>>,
+    pub display_language_selector: bool,
+}
+
+impl From<NsisSettings> for tauri_bundler::NsisSettings {
+    fn from(val: NsisSettings) -> Self {
+        tauri_bundler::NsisSettings {
+            template: val.template,
+            license: val.license,
+            header_image: val.header_image,
+            sidebar_image: val.sidebar_image,
+            installer_icon: val.installer_icon,
+            install_mode: val.install_mode.into(),
+            languages: val.languages,
+            custom_language_files: val.custom_language_files,
+            display_language_selector: val.display_language_selector,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NSISInstallerMode {
+    CurrentUser,
+    PerMachine,
+    Both,
+}
+
+impl From<NSISInstallerMode> for tauri_utils::config::NSISInstallerMode {
+    fn from(val: NSISInstallerMode) -> Self {
+        match val {
+            NSISInstallerMode::CurrentUser => tauri_utils::config::NSISInstallerMode::CurrentUser,
+            NSISInstallerMode::PerMachine => tauri_utils::config::NSISInstallerMode::PerMachine,
+            NSISInstallerMode::Both => tauri_utils::config::NSISInstallerMode::Both,
         }
     }
 }
